@@ -61,9 +61,10 @@ namespace PS1C
 		{
 			//WriteHost(path + PathIsDrive(path).ToString());
 			List<object> FolderItems = GetZipFileItems(path, recurse);
-			foreach (object i in FolderItems)
+			foreach (ZipFileObject i in FolderItems)
 			{
-				WriteItemObject(i, path, true);
+				//WriteItemObject(i, path, true);
+				WriteItemObject(i.Name, path, true);
 			}
 		}
 		#endregion NavigationCmdletProvider
