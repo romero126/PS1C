@@ -13,6 +13,8 @@ using System.IO.Compression;
 
 namespace PS1C
 {
+	//ToDo:
+	// Need to Rewrite this so that it gives out better output
 	public class ZipFileObject
 	{
 		public ZipArchiveEntry _archive;
@@ -49,11 +51,11 @@ namespace PS1C
 			_binary = IsBinary;
 			_archive = ArchiveEntry;
 			_stream = _archive.Open();
-			
+			//ZipFiles do not support Seek Functions
 			//_stream.Position = 0;
 			_reader = new StreamReader(_stream);
-			//_writer = new StreamWriter(_stream);
-			
+			//ZipFiles do not support Writing yet
+			//_writer = new StreamWriter(_stream);			
 		}
 
 		public void Close()
@@ -106,6 +108,7 @@ namespace PS1C
 		}
 		public void Seek(long offset, SeekOrigin origin)
 		{
+			//ZipFiles do not support Seek yet
 			//if (_stream.CanSeek) {
 				//_stream.Seek(offset, origin);
 			//}

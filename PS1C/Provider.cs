@@ -17,7 +17,8 @@ namespace PS1C
 	{
 
 		/*
-			DriveCmdletProvider, 
+		//
+		DriveCmdletProvider, 
 		#region DriveCmdletProvider
 		protected override object NewDriveDynamicParameters()
 		{
@@ -72,7 +73,8 @@ namespace PS1C
 			//GetZipFileItem(path)
 			if (PathIsDirectory(path))
 			{
-				//WriteErrorInternal("Directories have no content", path, ErrorCategory.InvalidOperation);
+
+				// ("Directories have no content", path, ErrorCategory.InvalidOperation);
 				throw new Exception("Directories have no content");
 			}
 
@@ -142,11 +144,9 @@ namespace PS1C
 		private ZipFileObject GetZipFileItem(string path)
 		{
 			string pwd = path.Replace(this.PSDriveInfo.Root + "\\", "").Replace("\\", "/").ToUpper();
-
 			ZipArchive archive = System.IO.Compression.ZipFile.OpenRead(this.PSDriveInfo.Root);
 			foreach (ZipArchiveEntry entry in archive.Entries)
 				{
-
 					if (entry.FullName.ToUpper() == pwd)
 					{
 						return new ZipFileObject(entry, PSDriveInfo.Name, pwd, entry.Name, false);
@@ -195,7 +195,6 @@ namespace PS1C
 
 		private void WriteHost(string output) {
 			InformationRecord record = new InformationRecord(output, output);
-			
 			WriteInformation(record);
 			WriteItemObject(output, "Message", false);
 		}
