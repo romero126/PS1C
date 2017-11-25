@@ -13,9 +13,10 @@ namespace PS1C
 {
 
 	[CmdletProvider("PS1C", ProviderCapabilities.ShouldProcess)]
+	//public class Provider : FileSystemProvider, IContentCmdletProvider
 	public class Provider : NavigationCmdletProvider, IContentCmdletProvider
+	//NavigationCmdletProvider, ItemCmdletProvider
 	{
-
 		/*
 		//
 		DriveCmdletProvider, 
@@ -26,8 +27,9 @@ namespace PS1C
 		}
 		#endregion DriveCmdletProvider
 		*/
+
+
 		#region NavigationCmdletProvider
-		private ZipArchive archive;
 		protected override bool IsValidPath(string path)
 		{
 			return true;
@@ -38,8 +40,9 @@ namespace PS1C
 			{
 				throw new Exception("File does not exist");
 			}
-			archive = System.IO.Compression.ZipFile.OpenRead(drive.Root);
-			return base.NewDrive(drive);
+			
+			//archive = System.IO.Compression.ZipFile.Open(drive.Root);
+			return new DriveInfo(drive);
 		}
 
 		protected override bool ItemExists(string path)
@@ -56,44 +59,61 @@ namespace PS1C
 		{
 			return true;
 		}
-
+		
 		protected override void GetChildItems(string path, bool recurse)
 		{
-			//WriteHost(path + PathIsDrive(path).ToString());
 			List<object> FolderItems = GetZipFileItems(path, recurse);
-			foreach (ZipFileObject i in FolderItems)
+
+			//PSObject r = SerializeObject(new Zip.Directory());
+			//WriteItemObject(r, path, true);
+			foreach (object i in FolderItems)
 			{
-				//WriteItemObject(i, path, true);
-				WriteItemObject(i.Name, path, true);
+				PSObject r = SerializeObject(i);
+				
+				WriteItemObject(r, path, true);
 			}
+			
 		}
+
 		#endregion NavigationCmdletProvider
 		#region IContentCmdletProvider
-		public IContentReader GetContentReader(string path)
+		public IContentWriter GetContentWriter(string path)
 		{
-			//GetZipFileItem(path)
+			//Todo: Cleanup Content Reader / Writer
 			if (PathIsDirectory(path))
 			{
-
 				// ("Directories have no content", path, ErrorCategory.InvalidOperation);
 				throw new Exception("Directories have no content");
 			}
-
-			ZipFileObject v = GetZipFileItem(path);
-			if (v != null) {
-				ZipFileStream obj = new ZipFileStream(v._archive, false);
-				return obj;
+			Zip.Item v = GetZipFileItem(path);
+			if (v != null)
+			{
+				return v.Open(false, ZipArchiveMode.Read);
 			}
+			return null;
+		}
+		public IContentReader GetContentReader(string path)
+		{
+			//Todo: Cleanup Content Reader / Writer
+			if (PathIsDirectory(path))
+			{
+				// ("Directories have no content", path, ErrorCategory.InvalidOperation);
+				throw new Exception("Directories have no content");
+			}
+			
+			Zip.Item v = GetZipFileItem(path);
+
+			if (v != null) {
+				return v.Open(false, ZipArchiveMode.Read);
+			}
+			
 			return null;
 		}
 		public object GetContentReaderDynamicParameters(string path)
 		{
 			return null;
 		}
-		public IContentWriter GetContentWriter(string path)
-		{
-			return null;
-		}
+
 		public object GetContentWriterDynamicParameters(string path)
 		{
 			return null;
@@ -101,13 +121,38 @@ namespace PS1C
 		public void ClearContent(string path)
 		{
 			WriteVerbose($"SPOProvider::ClearContent (path = ’{path}’)");
+			
 		}
 		public object ClearContentDynamicParameters(string path)
 		{
 			return null;
 		}
 		#endregion IContentCmdletProvider
+		#region ItemCmdletProvider
+		protected override void InvokeDefaultAction(string path)
+		{
+			//WriteHost("I was called");
+			base.InvokeDefaultAction(path);
+		}
+
+		#endregion ItemCmdletProvider
+		#region FileSystem
+		protected override void RemoveItem(string path, bool recurse)
+		{
+			//WriteHost("RemoveItem Called");
+			base.RemoveItem(path, recurse);
+		}
+
+		#endregion FileSystem
+
 		#region Helpers
+		private PSObject SerializeObject(object obj) {
+			PSObject result = new PSObject(obj);
+			PSPropertySet display = new PSPropertySet("DefaultDisplayPropertySet", new[] { "LastWriteTime", "Length", "Name", "FullName" });
+			PSMemberSet mi = new PSMemberSet("PSStandardMembers", new[] { display });
+			result.Members.Add(mi);
+			return result;
+		}
 
 		private bool PathIsDrive(string path) {
 			if (String.IsNullOrEmpty(path.Replace(PSDriveInfo.Root, "")) || String.IsNullOrEmpty(path.Replace(PSDriveInfo.Root + "\\", "")))
@@ -117,12 +162,9 @@ namespace PS1C
 		}
 		private bool PathIsFile(string path) {
 			string pwd = path.Replace(this.PSDriveInfo.Root + "\\", "").Replace("\\", "/").ToUpper();
-			using (ZipArchive archive = System.IO.Compression.ZipFile.OpenRead(this.PSDriveInfo.Root)) {
-				foreach (ZipArchiveEntry entry in archive.Entries) {
-					if (entry.FullName.ToUpper() == pwd)
-					{
-						return true;
-					}
+			foreach (Zip.Item entry in (PSDriveInfo as DriveInfo).FileList) {
+				if (entry.FullPath.ToUpper() == pwd) {
+					return true;
 				}
 			}
 			return false;
@@ -130,60 +172,52 @@ namespace PS1C
 		private bool PathIsDirectory(string path)
 		{
 			string pwd = path.Replace(this.PSDriveInfo.Root + "\\", "").Replace("\\", "/").ToUpper();
-			using (ZipArchive archive = System.IO.Compression.ZipFile.OpenRead(this.PSDriveInfo.Root))
-			{
-				foreach (ZipArchiveEntry entry in archive.Entries)
+			foreach (Zip.Item entry in (PSDriveInfo as DriveInfo).FileList) {
+				if (entry.FullPath.ToUpper().StartsWith(pwd) && entry.FullPath.ToUpper() != pwd)
 				{
-					if (entry.FullName.ToUpper().StartsWith(pwd) && entry.FullName.ToUpper() != pwd)
-					{
-						return true;
-					}
+					return true;
 				}
 			}
 			return false;
 		}
-		private ZipFileObject GetZipFileItem(string path)
+		private Zip.Item GetZipFileItem(string path)
 		{
 			string pwd = path.Replace(this.PSDriveInfo.Root + "\\", "").Replace("\\", "/").ToUpper();
-			ZipArchive archive = System.IO.Compression.ZipFile.OpenRead(this.PSDriveInfo.Root);
-			foreach (ZipArchiveEntry entry in archive.Entries)
+			foreach (Zip.Item entry in (PSDriveInfo as DriveInfo).FileList)
+			{
+				if (entry.FullPath.ToUpper() == pwd)
 				{
-					if (entry.FullName.ToUpper() == pwd)
-					{
-						return new ZipFileObject(entry, PSDriveInfo.Name, pwd, entry.Name, false);
-					}
+					return entry;
 				}
-			
+			}
 			return null;
 		}
 		private List<object> GetZipFileItems(string path, bool recurse)
 		{
-			string pwd = path.Replace(this.PSDriveInfo.Root + "\\", "").Replace("\\", "/").ToUpper();
+			string pwd = path.Replace(this.PSDriveInfo.Root + "\\", "").Replace("\\", "/").ToUpper() + "/";
 			List<object> foldersAndFiles = new List<object>();
 			List<object> folders = new List<object>();
 			List<object> files = new List<object>();
-			using (ZipArchive archive = System.IO.Compression.ZipFile.OpenRead(this.PSDriveInfo.Root))
+			DriveInfo driveinfo = PSDriveInfo as DriveInfo;
+			foreach (Zip.Item entry in driveinfo.FileList)
 			{
-				foreach (ZipArchiveEntry entry in archive.Entries)
-				{
-					string n = entry.FullName.ToUpper();
-					if (n.StartsWith(pwd)) {
-						if (pwd != "")
-							n = n.Substring(pwd.Length, (n.Length - pwd.Length)).Remove(0, 1);
-						if (!n.Contains("/")) {
-							files.Add(new ZipFileObject(entry, PSDriveInfo.Name, pwd, entry.Name, false));
-							
-						} else {
-							string name = n.Split('/')[0] + "/";
-							
-							ZipFileObject obj = new ZipFileObject(null, PSDriveInfo.Name, pwd, name, true);
-							bool found = false;
-							foreach (ZipFileObject i in folders)
-								if (i.Name == name)
-									found = true;
-							if (!found)
-								folders.Add(obj);
+				string n = entry.FullPath.ToUpper();
+				if (n.StartsWith(pwd)) {
+					if (pwd != "" && n.Length >= pwd.Length)
+						n = n.Remove(0, pwd.Length);
+					if (!n.Contains("/")) {
+						files.Add(entry);
+					} else {
+						string name = n.Split('/')[0] + "/";
+						Zip.Directory obj = new Zip.Directory(entry.ArchivePath, entry.Drive, pwd, name);
+						bool found = false;
+						foreach (Zip.Directory i in folders) {
+							if (i.FullPath == obj.FullPath) {
+								found = true;
+							}
 						}
+						if (!found)
+							folders.Add(obj);
 					}
 				}
 			}

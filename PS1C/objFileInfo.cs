@@ -15,33 +15,9 @@ namespace PS1C
 {
 	//ToDo:
 	// Need to Rewrite this so that it gives out better output
-	public class ZipFileObject
+	public class ZipFileStream : IContentReader, IContentWriter
 	{
-		public ZipArchiveEntry _archive;
-		public string Name { get { return (_name != null) ? _name : _archive.Name; } }
-		public string FullName { get { return _fullname; } }
-		private string _fullname;
-		private string _name;
-		public string path { get; set; }
-		public long Length { get { return _archive.Length; } }
-		public DateTimeOffset CreationTime { get { return _archive.LastWriteTime; } }
-		public DateTimeOffset LastWriteTime { get { return _archive.LastWriteTime; } }
-		public DateTimeOffset LastAccessTime { get { return _archive.LastWriteTime; } }
-		public bool isDirectory;
-		private Stream _stream;
-		public ZipFileObject(ZipArchiveEntry entry, string drive, string path, string name, bool isdirectory = false)
-		{
-			this.path = path.Replace("//", "/");
-			_name = name;
-			_fullname = string.Format("{0}:/{1}/{2}", drive, path, name).Replace("//", "/");
-			isDirectory = isdirectory;
-			_archive = entry;
-		}
-
-
-	}
-	public class ZipFileStream : IContentReader
-	{
+		private Stream _zstream;
 		private Stream _stream;
 		private StreamReader _reader;
 		private StreamWriter _writer;
@@ -50,16 +26,20 @@ namespace PS1C
 		public ZipFileStream(ZipArchiveEntry ArchiveEntry, bool IsBinary) {
 			_binary = IsBinary;
 			_archive = ArchiveEntry;
-			_stream = _archive.Open();
-			//ZipFiles do not support Seek Functions
-			//_stream.Position = 0;
+
+			_zstream = _archive.Open();
+			//_stream = _archive.Open();
+			_stream = new MemoryStream();
+			_zstream.CopyTo(_stream);
+
+			_stream.Position = 0;
 			_reader = new StreamReader(_stream);
-			//ZipFiles do not support Writing yet
-			//_writer = new StreamWriter(_stream);			
+			_writer = new StreamWriter(_stream);
 		}
 
 		public void Close()
 		{
+
 			if (_reader != null)
 			{
 				_reader.Close();
@@ -69,23 +49,35 @@ namespace PS1C
 			{
 				_writer.Close();
 			}
+			if (_stream != null)
+			{
+				_stream.Close();
+			}
+
 		}
 		public void Dispose()
 		{
-
+			if (_reader != null) {
+				_reader.Dispose();
+				_reader = null;
+			}
+			if (_writer != null) {
+				_writer.Dispose();
+				_writer = null;
+			}
+			if (_stream != null)
+			{
+				_stream.Dispose();
+				_stream = null;
+			}
 		}
 
-		public int Read()
-		{
-			return 1;
-		}
 		public System.Collections.IList Read(long readcount)
 		{
 			var list = new List<object>();
 			long counter = 0;
 			if (!_binary)
 			{
-
 				while (!_reader.EndOfStream && (counter < readcount || readcount < 1))
 				{
 					list.Add(_reader.ReadLine());
@@ -106,13 +98,34 @@ namespace PS1C
 			return list;
 		
 		}
+		public System.Collections.IList Write(System.Collections.IList content) {
+			if (!_binary) {
+				 foreach (string str in content) {
+					_writer.WriteLine(str);
+				}
+			}
+			else
+			{
+				foreach (var obj in content) {
+					if (obj is byte) {
+						_stream.WriteByte((byte)obj);
+					}
+					else if (obj is char) {
+						_stream.WriteByte(Convert.ToByte((char)obj));
+					}
+				}
+			}
+			_writer.Flush();
+			_stream.Position = 0;
+
+
+			return content;
+		}
 		public void Seek(long offset, SeekOrigin origin)
 		{
-			//ZipFiles do not support Seek yet
-			//if (_stream.CanSeek) {
-				//_stream.Seek(offset, origin);
-			//}
-
+			if (_stream.CanSeek) {
+				_stream.Seek(offset, origin);
+			}
 		}
 	}
 
