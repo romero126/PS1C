@@ -199,15 +199,13 @@ namespace PS1C
 			List<object> folders = new List<object>();
 			List<object> files = new List<object>();
 			DriveInfo driveinfo = PSDriveInfo as DriveInfo;
-			//Hacky... :(
+
 			if (pwd == "/")
 				pwd = "";
 			foreach (Zip.Item entry in driveinfo.FileList)
 			{
 				string n = entry.FullPath.ToUpper();
-				
 				if (n.StartsWith(pwd)) {
-					
 					if (pwd != "" && n.Length >= pwd.Length)
 						n = n.Remove(0, pwd.Length);
 					if (!n.Contains("/")) {

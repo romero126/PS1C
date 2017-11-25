@@ -119,6 +119,7 @@ namespace PS1C.Zip
 			LockEntry = DriveInfo.OpenReadWrite(this.FullPath, Update);
 
 			// Set Streams
+			//_stream = LockEntry.Open();
 			_zstream = LockEntry.Open();
 			_stream = new MemoryStream();
 			_zstream.CopyTo(_stream);
@@ -129,6 +130,9 @@ namespace PS1C.Zip
 		}
 		public void Close()
 		{
+			if (_update == ZipArchiveMode.Update) {
+				_stream.CopyTo(_zstream);
+			}
 			if (_reader != null)
 			{
 				_reader.Close();
@@ -145,6 +149,8 @@ namespace PS1C.Zip
 			{
 				_zstream.Close();
 			}
+
+
 			Lock = false;
 			LockEntry = null;
 			if (!DriveInfo.isDriveLocked())
