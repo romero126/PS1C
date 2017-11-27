@@ -11,7 +11,16 @@
 	cd subpath
 	ls
 
-#Get Content
+#Get Content <path> [-raw] [-isbinary]
+# Working Parameters
+# -raw
+# -isbinary 
 get-content filename.txt
 
 
+
+#Invoke Scripts
+invoke-item script.ps1
+
+get-item
+test-path

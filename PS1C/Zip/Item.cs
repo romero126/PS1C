@@ -1,4 +1,6 @@
 ﻿using System;
+
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,6 +13,17 @@ using System.Management.Automation.Provider;
 
 namespace PS1C.Zip
 {
+	/// <summary>
+	/// The content stream class for the file system provider. It implements both
+	/// the IContentReader and IContentWriter interfaces.
+	/// </summary>
+	///
+	/// <remarks>
+	/// Note, this class does no specific error handling. All errors are allowed to
+	/// propagate to the caller so that they can be written to the error pipeline
+	/// if necessary.
+	/// </remarks>
+	///
 	internal class Item : IContentReader, IContentWriter
 	{
 		public string Name;
@@ -37,6 +50,7 @@ namespace PS1C.Zip
 		#region IContent
 		public bool Lock;
 		public ZipArchiveEntry LockEntry;
+		private ItemContentParameters StreamParameters;
 		public bool isLocked { get { return Lock; } }
 		private Stream _zstream;
 		private Stream _stream;
@@ -49,35 +63,66 @@ namespace PS1C.Zip
 		#region IContentReader
 		public System.Collections.IList Read(long readcount)
 		{
-			var list = new List<object>();
-			long counter = 0;
-			if (!_binary)
+
+			if (StreamParameters.Raw && StreamParameters.Wait)
 			{
-				while (!_reader.EndOfStream && (counter < readcount || readcount < 1))
-				{
-					list.Add(_reader.ReadLine());
-					counter++;
-				}
+				throw new PSInvalidOperationException("Raw and Wait cannot exist");
 			}
-			else
+
+			ArrayList blocks = new ArrayList();
+			long counter = 0;
+
+			if (StreamParameters.Raw) {
+				StringBuilder content = new StringBuilder();
+				string ContentRead = _reader.ReadToEnd();
+				counter = ContentRead.Length;
+				content.Append(ContentRead);
+				
+				if (content.Length > 0)
+					blocks.Add(content.ToString());
+				return blocks.ToArray();
+			}
+			else if (StreamParameters.IsBinary)
 			{
 				while (counter < readcount || readcount < 1)
 				{
 					var value = _stream.ReadByte();
 					if (value == -1) break;
-					list.Add((byte)value);
+					blocks.Add((byte)value);
 					counter++;
 				}
-
 			}
-			return list;
-
+			else
+			{
+				while (!_reader.EndOfStream && (counter < readcount || readcount < 1))
+				{
+					blocks.Add(_reader.ReadLine());
+					counter++;
+				}
+			}
+			/*
+			if (StreamParameters.Raw) {
+				String result = "";
+				foreach (object i in list)
+				{
+					result = string.Format("{0}\r\n{1}", result, (i as String));
+				}
+				list.Clear();
+				foreach (char i in result.ToCharArray()) {
+					list.Add((char)i);
+					List<object>() list = new List<object>();
+				}
+			}
+			*/
+			
+			//throw new Exception("My count" + blocks.ToArray().Length.ToString());
+			return blocks.ToArray();
 		}
 		#endregion IContentReader
 		#region IContentWriter
 		public System.Collections.IList Write(System.Collections.IList content)
 		{
-			if (!_binary)
+			if (!StreamParameters.IsBinary)
 			{
 				foreach (string str in content)
 				{
@@ -104,15 +149,16 @@ namespace PS1C.Zip
 		}
 		#endregion IContentWriter
 		#region IContent_Shared
-		public Item Open(bool IsBinary, ZipArchiveMode Update)
+		public Item Open(ItemContentParameters streamparameters, ZipArchiveMode Update)
 		{
 			if (DriveInfo.isDriveLocked())
 			{
 				throw new Exception("Cannot open more than one file at a time.");
 			}
+			StreamParameters = streamparameters;
 			DriveInfo.LockDrive();
 			Lock = true;
-			_binary = IsBinary;
+			_binary = StreamParameters.IsBinary;
 			_update = Update;
 				
 			// Get the LockEntry

@@ -9,7 +9,7 @@ Get-Content
 TODO:
 	Add Write Capability
 	and Better Stream manipulation.
-	
+
 
 Example Usage:
 
@@ -18,4 +18,6 @@ new-psdrive -name APPX -psprovider PS1C -root "$($pwd.path)\ZipFile.zip"
 cd APPX:
 ls | ft Name, FullName, *dir*
 
-get-content APPX:\file.txt
+get-content APPX:\file.txt -raw
+
+See "Example Scripts.txt" for more usage data.

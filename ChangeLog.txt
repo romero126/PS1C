@@ -1,26 +1,35 @@
+Version 0.0.1.1 Added Commands and Invoke-Item
+	Nothing major just minor tweaks.
+	New Features
+		Get-Content -raw
+			Added the ability to get the raw value of the files inside powershell.
+		Invoke-Item
+			Now Invokes any script inside the zip file.
+			Note: No error handling.
+
 Version 0.0.1 The First Update
-No real feature changes, however I am laying the groundwork to Modify and Edit Files within the ZipFile. s
+	No real feature changes, however I am laying the groundwork to Modify and Edit Files within the ZipFile. s
 
-Now with less IOPS.
-	Rewrote code to cache data, and store variables for each drive.
+	Now with less IOPS.
+		Rewrote code to cache data, and store variables for each drive.
 
-Cleaned up Default PSObject Output.
-	Looks a lot more like the file system.
+	Cleaned up Default PSObject Output.
+		Looks a lot more like the file system.
 
 
 
 Version 0.0.0 Initial Release
-PS1C is a simple Zipfile Reader
+	PS1C is a simple Zipfile Reader
 
-Working Features:
-dir
-	Reads Directory Structure
-Get-Content
-	Reads content of files
+	Working Features:
+		dir
+			Reads Directory Structure
+		Get-Content
+		Reads content of files
 
-TODO:
-	Add Write Capability
-	and Better Stream manipulation.
+	TODO:
+		Add Write Capability
+		and Better Stream manipulation.
 	
 	
 

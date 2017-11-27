@@ -9,6 +9,7 @@ using System.Management.Automation.Provider;
 using System.Windows.Forms;
 using System.IO;
 using System.IO.Compression;
+using System.Diagnostics;
 namespace PS1C
 {
 
@@ -44,7 +45,10 @@ namespace PS1C
 			//archive = System.IO.Compression.ZipFile.Open(drive.Root);
 			return new DriveInfo(drive);
 		}
-
+		protected override object NewDriveDynamicParameters()
+		{
+			return base.NewDriveDynamicParameters();
+		}
 		protected override bool ItemExists(string path)
 		{
 			if (PathIsDrive(path))
@@ -74,7 +78,16 @@ namespace PS1C
 			}
 			
 		}
-
+		protected override void GetItem(string path)
+		{
+			WriteVerbose($"Provider::GetItem (Path = ’{path}’)");
+			Zip.Item obj = GetZipFileItem(path);
+			if (obj != null)
+			{
+				WriteItemObject(obj, path, false);
+			
+			}
+		}
 		#endregion NavigationCmdletProvider
 		#region IContentCmdletProvider
 		public IContentWriter GetContentWriter(string path)
@@ -85,13 +98,15 @@ namespace PS1C
 				// ("Directories have no content", path, ErrorCategory.InvalidOperation);
 				throw new Exception("Directories have no content");
 			}
-			Zip.Item v = GetZipFileItem(path);
-			if (v != null)
+			Zip.Item obj = GetZipFileItem(path);
+			if (obj != null)
 			{
-				return v.Open(false, ZipArchiveMode.Read);
+				Zip.ItemContentParameters objParam = DynamicParameters as Zip.ItemContentParameters;
+				return obj.Open(objParam, ZipArchiveMode.Read);
 			}
 			return null;
 		}
+
 		public IContentReader GetContentReader(string path)
 		{
 			//Todo: Cleanup Content Reader / Writer
@@ -101,27 +116,26 @@ namespace PS1C
 				throw new Exception("Directories have no content");
 			}
 			
-			Zip.Item v = GetZipFileItem(path);
-
-			if (v != null) {
-				return v.Open(false, ZipArchiveMode.Read);
+			Zip.Item obj = GetZipFileItem(path);
+			if (obj != null) {
+				Zip.ItemContentParameters objParam = DynamicParameters as Zip.ItemContentParameters;
+				return obj.Open(objParam, ZipArchiveMode.Read);
 			}
-			
 			return null;
+		}
+		public object GetContentWriterDynamicParameters(string path)
+		{
+			return new Zip.ItemContentParameters();
 		}
 		public object GetContentReaderDynamicParameters(string path)
 		{
-			return null;
-		}
-
-		public object GetContentWriterDynamicParameters(string path)
-		{
-			return null;
+			return new Zip.ItemContentParameters();
 		}
 		public void ClearContent(string path)
 		{
 			WriteVerbose($"SPOProvider::ClearContent (path = ’{path}’)");
-			
+			throw new Exception("No");
+
 		}
 		public object ClearContentDynamicParameters(string path)
 		{
@@ -131,10 +145,15 @@ namespace PS1C
 		#region ItemCmdletProvider
 		protected override void InvokeDefaultAction(string path)
 		{
-			//WriteHost("I was called");
-			base.InvokeDefaultAction(path);
+			WriteVerbose($"PS1C::InvokeDefaultAction");
+			Zip.Item v = GetZipFileItem(path);
+			if (v != null) {
+				this.SessionState.InvokeCommand.InvokeScript(
+					string.Format("$v = get-content {0} -raw; . ([ScriptBlock]::Create($v))", v.FullName)
+				);
+			}
 		}
-
+		
 		#endregion ItemCmdletProvider
 		#region FileSystem
 		protected override void RemoveItem(string path, bool recurse)
@@ -148,17 +167,19 @@ namespace PS1C
 		#region Helpers
 		private PSObject SerializeObject(object obj) {
 			PSObject result = new PSObject(obj);
+			
 			PSPropertySet display = new PSPropertySet("DefaultDisplayPropertySet", new[] { "LastWriteTime", "Length", "Name", "FullName" });
 			PSMemberSet mi = new PSMemberSet("PSStandardMembers", new[] { display });
+			
 			result.Members.Add(mi);
 			return result;
 		}
-
 		private bool PathIsDrive(string path) {
 			if (String.IsNullOrEmpty(path.Replace(PSDriveInfo.Root, "")) || String.IsNullOrEmpty(path.Replace(PSDriveInfo.Root + "\\", "")))
 				return true;
 			else
 				return false;
+			
 		}
 		private bool PathIsFile(string path) {
 			string pwd = path.Replace(this.PSDriveInfo.Root + "\\", "").Replace("\\", "/").ToUpper();
@@ -180,6 +201,7 @@ namespace PS1C
 			}
 			return false;
 		}
+
 		private Zip.Item GetZipFileItem(string path)
 		{
 			string pwd = path.Replace(this.PSDriveInfo.Root + "\\", "").Replace("\\", "/").ToUpper();
