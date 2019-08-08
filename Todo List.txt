@@ -1,3 +1,55 @@
+ChildItem Cmdlets
+	[?] Get-ChildItem
+		[?] 
+
+Content Cmdlets
+	[?] Add-Content
+	[?] Clear-Content
+	[?] Get-Content
+	[?] Set-Content
+
+Item Cmdlets
+	[?] Clear-Item
+	[?] Copy-Item
+	[?] Get-Item
+	[?] Invoke-Item
+	[?] Move-Item
+	[?] New-Item
+	[?] Remove-Item
+	[?] Rename-Item
+	[?] Set-Item
+
+ItemProperty cmdlets
+	[?] Clear-ItemProperty
+	[?] Copy-ItemProperty
+	[?] Get-ItemProperty
+	[?] Move-ItemProperty
+	[?] New-ItemProperty
+	[?] Remove-ItemProperty
+	[?] Rename-ItemProperty
+	[?] Set-ItemProperty
+
+Location cmdlets
+	[?] Get-Location
+	[?] Pop-Location
+	[?] Push-Location
+	[?] Set-Location
+	[?] Path cmdlets
+	[?] Join-Path
+	[?] Convert-Path
+	[?] Split-Path
+	[?] Resolve-Path
+	[?] Test-Path
+
+PSDrive Cmdlets
+	[?] New-PSDrive
+	[?] Get-PSDrive
+	[?] Remove-PSDrive
+
+PSProvider Cmdlets
+	[X] Get-PSProvider
+
+
 Todo List:
 	Invoke Scripts Nativly
 	Create File
@@ -7,5 +59,7 @@ Todo List:
 Request for Information:
 	Need information on how to call scripts without calling get-content.
 	Example: Invoke / .\ScriptName.ps1
+
+
 
 

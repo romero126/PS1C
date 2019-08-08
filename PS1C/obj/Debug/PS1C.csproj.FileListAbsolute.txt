@@ -1,9 +1,0 @@
-C:\Users\v-jurom\OneDrive\Projects\PS1C\PS1C\obj\Debug\PS1C.csprojResolveAssemblyReference.cache
-C:\Users\v-jurom\OneDrive\Projects\PS1C\PS1C\obj\Debug\PS1C.csproj.CoreCompileInputs.cache
-C:\Users\v-jurom\OneDrive\Projects\PS1C\PS1C\bin\Debug\PS1C.dll.config
-C:\Users\v-jurom\OneDrive\Projects\PS1C\PS1C\bin\Debug\PS1C.dll
-C:\Users\v-jurom\OneDrive\Projects\PS1C\PS1C\bin\Debug\PS1C.pdb
-C:\Users\v-jurom\OneDrive\Projects\PS1C\PS1C\bin\Debug\PowerShell.dll
-C:\Users\v-jurom\OneDrive\Projects\PS1C\PS1C\bin\Debug\System.Management.Automation.dll
-C:\Users\v-jurom\OneDrive\Projects\PS1C\PS1C\obj\Debug\PS1C.dll
-C:\Users\v-jurom\OneDrive\Projects\PS1C\PS1C\obj\Debug\PS1C.pdb
