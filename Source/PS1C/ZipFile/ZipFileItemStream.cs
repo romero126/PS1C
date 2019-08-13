@@ -5,15 +5,17 @@ using System.Management.Automation.Provider;
 using System.IO.Compression;
 
 
-namespace PS1C.Archive
+namespace Microsoft.PowerShell.Commands
 {
-    public class FileStream : System.IO.Stream
+    public class ZipFileItemStream : System.IO.Stream
     {
 
         private ZipArchive _zipArchive;
         private ZipArchiveEntry _zipArchiveEntry;
         private System.IO.Stream _zipArchiveEntryStream;
         public System.IO.MemoryStream _stream;
+
+        public bool _isClosed;
         public override long Length {
             get
             {
@@ -78,7 +80,7 @@ namespace PS1C.Archive
             return _stream.Seek(offset, origin);
         }
 
-        public bool OpenStream(string archiveName, string path, System.IO.FileMode mode)
+        public ZipFileItemStream(string archiveName, string path, System.IO.FileMode mode)
         {
             ZipArchiveMode zipArchiveMode = ZipArchiveMode.Read;
             switch (mode)
@@ -113,40 +115,24 @@ namespace PS1C.Archive
             
             // Sets position to 0 so it can be fresh
             _stream.Position = 0;
-
-            return true;
-        }
-        public FileStream(string archiveName, string path, System.IO.FileMode mode)
-        {
-            if (OpenStream(archiveName, path, mode))
-            {
-
-            }
         }
 
-        public FileStream()
-        {
 
-        }
-        public FileStream(ZipArchiveEntry entry) {
-
-        }
         public override void Close()
         {
-            if (_zipArchive == null)
+            if (!_isClosed)
             {
-                return;
-            }
-            
-            // Avoid writing back a value if opened with Read permissions.
-            if (_zipArchive.Mode != ZipArchiveMode.Read)
-            {
-                _stream.Position = 0;
-                // Write all of the buffer. 
-                _zipArchiveEntryStream.Seek(0, SeekOrigin.Begin);
-                _stream.WriteTo(_zipArchiveEntryStream);
-            }
-            try {
+                // Avoid writing back a value if opened with Read permissions.
+                if (_zipArchive.Mode != ZipArchiveMode.Read)
+                {
+                    _stream.Position = 0;
+                    // Write all of the buffer. 
+                    _zipArchiveEntryStream.Seek(0, SeekOrigin.Begin);
+                    _zipArchiveEntryStream.SetLength(0);
+                    
+                    _stream.WriteTo(_zipArchiveEntryStream);
+                }
+
                 _zipArchiveEntryStream.Flush();
                 
                 _stream.Dispose();
@@ -154,12 +140,9 @@ namespace PS1C.Archive
 
                 _zipArchive.Dispose();
                 _zipArchive = null;
+                _isClosed = true;
                 GC.Collect();
             }
-            catch {
-
-            }
-
         }
 
         public void Dispose()
@@ -167,7 +150,7 @@ namespace PS1C.Archive
 
         }
 
-        ~FileStream()
+        ~ZipFileItemStream()
         {
             Dispose();
         }

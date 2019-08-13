@@ -51,11 +51,8 @@ function Pull-File
     New-Item -Path $ExportFolder -ItemType Directory -Force | Out-Null
 
     Write-Host "Downloading Content", $URI -ForeGroundColor Cyan
-    #if ($Raw) {
-        Invoke-WebRequest -uri $FullURI -UseBasicParsing | % Content | Out-File -FilePath $ExportPath
-    #} else {
-    #    Invoke-RestMethod -uri $FullURI | Out-File -FilePath $ExportPath        
-    #}
+
+    Invoke-WebRequest -uri $FullURI -UseBasicParsing | % Content | Out-File -FilePath $ExportPath
 
 
 }
@@ -81,3 +78,5 @@ Write-Host "Building"
 dotnet build .\Source\PS1C\ -v q | Select-String "Error" | Select -unique | Write-Host -ForegroundColor Red
 
 pwsh.exe -Command ". { .\Test.ps1 }"
+
+#Start-Process pwsh.exe -ArgumentList { -Command ". { .\test.ps1 }" -i -NoExit }

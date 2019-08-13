@@ -7,12 +7,15 @@ using Microsoft.PowerShell.Commands;
 using System.Text;
 using System.Resources;
 using System.Globalization;
-
+using PS1C.Archive;
 
 namespace PS1C
 {
-    //public class Provider : FileSystemProvider, IContentCmdletProvider
-    public partial class Provider : NavigationCmdletProvider, IContentCmdletProvider
+    public partial class ZipFileProvider : NavigationCmdletProvider,
+                                           IContentCmdletProvider
+    //                                       IPropertyCmdletProvider
+    //                                       ISecurityDescriptorCmdletProvider,
+    //                                       ICmdletProviderSupportsHelp
     {
         #region IContentCmdletProvider
         
@@ -76,7 +79,7 @@ namespace PS1C
 
                     if (usingByteEncoding && streamTypeSpecified)
                     {
-                        WriteWarning(ProviderStrings.EncodingNotUsed);
+                        WriteWarning(FileSystemProviderStrings.EncodingNotUsed);
                     }
 
                     if (streamTypeSpecified)
@@ -88,7 +91,7 @@ namespace PS1C
             }
             StreamContentReaderWriter stream = null;
 
-            Archive.FileInfo archiveFile = GetItemHelper(path);
+            ZipFileItemInfo archiveFile = GetItemHelper(path);
             //Archive.FileStream archiveStream = archiveFile.Open(FileMode.Append);
 
             try
@@ -99,7 +102,7 @@ namespace PS1C
                     if (usingByteEncoding)
                     {
                         Exception e =
-                            new ArgumentException(ProviderStrings.DelimiterError, "delimiter");
+                            new ArgumentException(FileSystemProviderStrings.DelimiterError, "delimiter");
                         WriteError(new ErrorRecord(
                             e,
                             "GetContentReaderArgumentError",
@@ -108,14 +111,12 @@ namespace PS1C
                     }
                     else
                     {
-                        stream = new ArchiveContentStream(archiveFile, FileMode.Append, encoding, usingByteEncoding, this, isRawStream);
-                        //stream = new StreamContentReaderWriter(archiveStream as System.IO.Stream, encoding, usingByteEncoding, this, isRawStream);
+                        stream = new ZipFileContentStream(archiveFile, FileMode.Append, encoding, usingByteEncoding, this, isRawStream);
                     }
                 }
                 else
                 {
-                    stream = new ArchiveContentStream(archiveFile, FileMode.Append, encoding, usingByteEncoding, this, isRawStream);
-                    //stream = new StreamContentReaderWriter(archiveStream as System.IO.Stream, encoding, usingByteEncoding, this, isRawStream);
+                    stream = new ZipFileContentStream(archiveFile, FileMode.Append, encoding, usingByteEncoding, this, isRawStream);
                 }
             }
             catch (PathTooLongException pathTooLong)
@@ -190,7 +191,7 @@ namespace PS1C
                 throw PSTraceSource.NewArgumentException("path");
             }
 
-            //path = NormalizePath(path);
+            path = NormalizePath(path);
 
             // If this is true, then the content will be read as bytes
             bool usingByteEncoding = false;
@@ -226,14 +227,21 @@ namespace PS1C
             }
 
             StreamContentReaderWriter stream = null;
-            Archive.FileInfo archiveFile = GetItemHelper(path);
-            //Archive.FileStream archiveStream = archiveFile.Open(FileMode.Append);
-            // Todo:
-            // Set-Item should create an item as well
+            //WriteWarning($"---> {path}");
+            ZipFileItemInfo archiveFile;
+            if (ItemExists(path))
+            {
+                archiveFile = GetItemHelper(path);
+            }
+            else {
+                // Set-Item should create an item if not exists.
+                WriteWarning($"ArchiveFile is null {path}");
+                archiveFile = NewItemHelper(path);
+            }
 
             try
             {
-                stream = new ArchiveContentStream(archiveFile, FileMode.Append, encoding, usingByteEncoding, this, false, suppressNewline);
+                stream = new ZipFileContentStream(archiveFile, FileMode.Append, encoding, usingByteEncoding, this, false, suppressNewline);
             }
             catch (PathTooLongException pathTooLong)
             {
@@ -269,18 +277,19 @@ namespace PS1C
         }
         public object GetContentWriterDynamicParameters(string path)
 		{
-            WriteVerbose("[Todo]: Provider GetContentWriterDynamicParameters(string path)");
 			return new StreamContentWriterDynamicParameters();
 		}
 
 		public void ClearContent(string path)
 		{
-            WriteVerbose("[Todo]: Provider ClearContent(string path)");
+            StreamContentReaderWriter stream = null;
+            ZipFileItemInfo archiveFile = GetItemHelper(path);
+            archiveFile.ClearContent();
+
 		}
 
         public object ClearContentDynamicParameters(string path)
 		{
-            WriteVerbose("[Todo]: Provider ClearContentDynamicParameters(string path)");
             return new FileSystemClearContentDynamicParameters();
 		}
         #endregion

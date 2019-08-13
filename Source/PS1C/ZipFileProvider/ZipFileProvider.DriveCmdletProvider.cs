@@ -5,8 +5,11 @@ using System.IO;
 
 namespace PS1C
 {
-    //public class Provider : FileSystemProvider, IContentCmdletProvider
-    public partial class Provider : NavigationCmdletProvider, IContentCmdletProvider
+    public partial class ZipFileProvider : NavigationCmdletProvider,
+                                           IContentCmdletProvider
+    //                                       IPropertyCmdletProvider
+    //                                       ISecurityDescriptorCmdletProvider,
+    //                                       ICmdletProviderSupportsHelp
     {
         #region DriveCmdletProvider
 		protected override PSDriveInfo NewDrive(PSDriveInfo drive)

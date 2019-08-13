@@ -9,7 +9,7 @@ using System.Management.Automation.Provider;
 using System.Management.Automation.Runspaces;
 using System.Management.Automation.Internal;
 
-namespace PS1C.Archive
+namespace Microsoft.PowerShell.Commands
 {
 
     /// <summary>

@@ -3,12 +3,10 @@ using System.IO;
 using System.IO.Compression;
 using System.Management.Automation;
 
-namespace PS1C.Archive
+namespace Microsoft.PowerShell.Commands
 {
-    public class FileInfo : System.IO.FileSystemInfo
+    public class ZipFileItemInfo : System.IO.FileSystemInfo
     {
-
-
         //Public Extension info
         
         //public DateTime        CreationTime;                   // {get;set;}
@@ -17,7 +15,7 @@ namespace PS1C.Archive
             get;
             private set;
         }
-        public DirectoryInfo   Directory;                      // {get;}
+        public DirectoryInfo Directory;                      // {get;}
         public string DirectoryName
         {
             get {
@@ -103,7 +101,7 @@ namespace PS1C.Archive
                 return archiveEntry.Archive;
             }
         }
-        public FileInfo(ZipArchiveEntry item, PSDriveInfo drive)
+        public ZipFileItemInfo(ZipArchiveEntry item, PSDriveInfo drive)
         {
             Drive = drive;
             archiveEntry = item;
@@ -111,8 +109,10 @@ namespace PS1C.Archive
 
         
         //Methods
-        //AppendText                Method         System.IO.StreamWriter AppendText()
-        
+        public StreamWriter AppendText()
+        {
+            return new StreamWriter( OpenWrite() );
+        }
 
         //CopyTo                    Method         System.IO.FileInfo CopyTo(string destFileName), System.IO.FileInfo CopyTo(s...
         
@@ -121,10 +121,24 @@ namespace PS1C.Archive
         //CreateObjRef              Method         System.Runtime.Remoting.ObjRef CreateObjRef(type requestedType)
         
         //CreateText                Method         System.IO.StreamWriter CreateText()
+        public StreamWriter CreateText()
+        {
+            return new StreamWriter( OpenWrite() );
+        }
         
         //Decrypt                   Method         void Decrypt()
         
         //Delete                    Method         void Delete()
+        public override void Delete()
+        {
+
+            using (ZipArchive zipArchive = ZipFile.Open(Drive.Root, ZipArchiveMode.Update))
+            {
+                ZipArchiveEntry zipArchiveEntry = zipArchive.GetEntry(archiveEntry.FullName);
+                zipArchiveEntry.Delete();
+            }
+
+        }
         
         //Encrypt                   Method         void Encrypt()
         
@@ -145,37 +159,30 @@ namespace PS1C.Archive
         //MoveTo                    Method         void MoveTo(string destFileName)
 
         //Open                      Method         System.IO.FileStream Open(System.IO.FileMode mode), System.IO.FileStream Op...
-        public FileStream Open(FileMode mode)
+        public ZipFileItemStream Open(FileMode mode)
         {
             
-            return new FileStream(Drive.Root, archiveEntry.FullName, mode);
+            return new ZipFileItemStream(Drive.Root, archiveEntry.FullName, mode);
         }
 
-        public FileStream Open(FileMode mode, FileAccess access)
-        {
-            // Quick map
-            throw new Exception("Not Implemented Exception");
-        }
-        public FileStream Open(FileMode mode, FileAccess access, FileShare share)
+        public ZipFileItemStream Open(FileMode mode, FileAccess access)
         {
             throw new Exception("Not Implemented Exception");
         }
-
-        //OpenRead                  Method         System.IO.FileStream OpenRead()
-        public FileStream OpenRead()
+        public ZipFileItemStream Open(FileMode mode, FileAccess access, FileShare share)
+        {
+            throw new Exception("Not Implemented Exception");
+        }
+        public ZipFileItemStream OpenRead()
         {
             return Open(FileMode.Open);
         }
 
-        //OpenText                  Method         System.IO.StreamReader OpenText()
-        //
         public StreamReader OpenText()
         {
             throw new Exception("Not Implemented Exception");
         }
-
-        //OpenWrite                 Method         System.IO.FileStream OpenWrite()
-        public FileStream OpenWrite()
+        public ZipFileItemStream OpenWrite()
         {
             return Open(FileMode.Append);
         }
@@ -184,10 +191,16 @@ namespace PS1C.Archive
         //Replace                   Method         System.IO.FileInfo Replace(string destinationFileName, string destinationBa...
         //SetAccessControl          Method         void SetAccessControl(System.Security.AccessControl.FileSecurity fileSecurity)
     
-        public override void Delete()
+        internal void ClearContent()
         {
-            
+            ZipFileItemStream fileStream = Open(FileMode.Append);
+            fileStream.Seek(0, SeekOrigin.Begin);
+            fileStream.SetLength(0);
+            fileStream.Flush();
+            fileStream.Close();
+            fileStream.Dispose();
         }
+
 
     }
 }
