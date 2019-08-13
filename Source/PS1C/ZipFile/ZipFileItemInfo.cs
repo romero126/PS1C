@@ -46,7 +46,7 @@ namespace Microsoft.PowerShell.Commands
         }
         public string FullName {
             get {
-                return String.Format("{0}:\\{1}", Drive.Name, archiveEntry.FullName);
+                return String.Format("{0}:\\{1}", Drive.Name, archiveEntry.FullName).Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
             }
         }
         public bool IsReadOnly
