@@ -119,6 +119,7 @@ namespace PS1C
         }
         private string NormalizePath(string path)
         {
+
             if (path.StartsWith(PSDriveInfo.Root))
             {
                 path = path.Remove(0, PSDriveInfo.Root.Length+1);
@@ -127,15 +128,12 @@ namespace PS1C
             {
                 path = path.Remove(0, PSDriveInfo.Name.Length+1);
             }
+            
+            path = path.Replace(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
 
-            if (path.StartsWith(PSDriveInfo.Root))
-            {
-
-                path = path.Remove(0, PSDriveInfo.Root.Length+1);
-                WriteWarning($"I matched twice!! {path}");
-            }
             return path;
         }
+
         #endregion
 
         
