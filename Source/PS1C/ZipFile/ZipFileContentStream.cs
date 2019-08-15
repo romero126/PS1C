@@ -32,6 +32,13 @@ namespace PS1C.Archive
             _provider = provider;
         }
 
+        public ZipFileContentStream(ZipFileItemInfo archiveFileInfo, FileMode mode, string delimiter, Encoding encoding, bool usingByteEncoding, CmdletProvider provider, bool isRawStream)
+        : base(archiveFileInfo.Open(mode), delimiter, encoding, provider, isRawStream)
+        {
+            _provider = provider;
+        }
+
+
         ~ZipFileContentStream()
         {
 

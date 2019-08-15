@@ -49,7 +49,6 @@ namespace PS1C
             path = NormalizePath(path);
             if ( path == "" )
             {
-                // TODO: Allow full walking of zip file.
                 return true;
             }
 			return false;
@@ -65,6 +64,7 @@ namespace PS1C
                     WriteItemObject(OutputItem, OutputItem.FullName, true);
 				}
 			}
+
 		}
 
         protected override void GetItem(string path)
@@ -85,7 +85,6 @@ namespace PS1C
         internal ZipFileItemInfo GetItemHelper(string path)
 		{
             path = NormalizePath(path);
-
 
             try {
                 using (ZipArchive zipArchive = ZipFile.OpenRead(PSDriveInfo.Root)) {
@@ -128,7 +127,7 @@ namespace PS1C
             {
                 path = path.Remove(0, PSDriveInfo.Name.Length+1);
             }
-            
+
             path = path.Replace(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
 
             return path;

@@ -2,6 +2,7 @@ using PS1C.Archive;
 using System;
 using System.IO;
 using System.Management.Automation;
+using System.Management.Automation.Internal;
 using System.Management.Automation.Provider;
 using Microsoft.PowerShell.Commands;
 using System.Text;
@@ -38,22 +39,20 @@ namespace PS1C
             if (string.IsNullOrEmpty(path))
             {
                 throw PSTraceSource.NewArgumentException("path");
-                //throw new PSArgumentException("path");
             }
 
-            //path = NormalizePath(path);
+            path = NormalizePath(path);
 
             // Defaults for the file read operation
             string delimiter = "\n";
 
-            Encoding encoding = Encoding.Default;
-            bool waitForChanges = false;
+            // Encoding encoding = Encoding.Default;
+            Encoding encoding = ClrFacade.GetDefaultEncoding();
 
             bool streamTypeSpecified = false;
             bool usingByteEncoding = false;
             bool delimiterSpecified = false;
             bool isRawStream = false;
-            string streamName = null;
 
             // Get the dynamic parameters.
             // They override the defaults specified above.
@@ -64,7 +63,7 @@ namespace PS1C
                 {
                     // -raw is not allowed when -first,-last or -wait is specified
                     // this call will validate that and throws.
-                    //ValidateParameters(dynParams.Raw);
+                    ValidateParameters(dynParams.Raw);
 
                     isRawStream = dynParams.Raw;
 
@@ -111,11 +110,13 @@ namespace PS1C
                     }
                     else
                     {
-                        stream = new ZipFileContentStream(archiveFile, FileMode.Append, encoding, usingByteEncoding, this, isRawStream);
+                        //Console.WriteLine("Get-Content : Delimiter");
+                        stream = new ZipFileContentStream(archiveFile, FileMode.Append, delimiter, encoding, usingByteEncoding, this, isRawStream);
                     }
                 }
                 else
                 {
+                    //Console.WriteLine("Get-Content : Default");
                     stream = new ZipFileContentStream(archiveFile, FileMode.Append, encoding, usingByteEncoding, this, isRawStream);
                 }
             }
@@ -155,7 +156,6 @@ namespace PS1C
                 );
             }
 
-
             if (stream == null)
             {
                 throw new Exception("Invalid stream");
@@ -186,6 +186,7 @@ namespace PS1C
         /// </exception>
         public IContentWriter GetContentWriter(string path)
         {
+
             if (string.IsNullOrEmpty(path))
             {
                 throw PSTraceSource.NewArgumentException("path");
@@ -198,15 +199,16 @@ namespace PS1C
             bool streamTypeSpecified = false;
             Encoding encoding = ClrFacade.GetDefaultEncoding();
             FileMode filemode = FileMode.OpenOrCreate;
-            string streamName = null;
             bool suppressNewline = false;
 
             // Get the dynamic parameters
             if (DynamicParameters != null)
             {
-                StreamContentWriterDynamicParameters dynParams =
-                    DynamicParameters as StreamContentWriterDynamicParameters;
 
+                // [BUG] Regardless of override DynamicParameters is of type FileSystemContentWriterDynamicParameters
+                // StreamContentWriterDynamicParameters dynParams = DynamicParameters as StreamContentWriterDynamicParameters;
+                FileSystemContentWriterDynamicParameters dynParams = DynamicParameters as FileSystemContentWriterDynamicParameters;
+                                                                 
                 if (dynParams != null)
                 {
                     usingByteEncoding = dynParams.AsByteStream;
@@ -227,7 +229,7 @@ namespace PS1C
             }
 
             StreamContentReaderWriter stream = null;
-            //WriteWarning($"---> {path}");
+
             ZipFileItemInfo archiveFile;
             if (ItemExists(path))
             {
@@ -235,7 +237,6 @@ namespace PS1C
             }
             else {
                 // Set-Item should create an item if not exists.
-                WriteWarning($"ArchiveFile is null {path}");
                 archiveFile = NewItemHelper(path);
             }
 
@@ -290,13 +291,38 @@ namespace PS1C
 
         public object ClearContentDynamicParameters(string path)
 		{
-            return new FileSystemClearContentDynamicParameters();
+            return new StreamContentClearContentDynamicParameters();
 		}
         #endregion
 
+        /// <summary>
+        /// -raw is not allowed when -first,-last or -wait is specified
+        /// this call will validate that and throws.
+        /// </summary>
+        private void ValidateParameters(bool isRawSpecified)
+        {
+            if (isRawSpecified)
+            {
+                if (this.Context_MyInvocation.BoundParameters.ContainsKey("TotalCount"))
+                {
+                    string message = StringUtil.Format(FileSystemProviderStrings.NoFirstLastWaitForRaw, "Raw", "TotalCount");
+                    throw new PSInvalidOperationException(message);
+                }
+            
 
+                if (this.Context_MyInvocation.BoundParameters.ContainsKey("Tail"))
+                {
+                    string message = StringUtil.Format(FileSystemProviderStrings.NoFirstLastWaitForRaw, "Raw", "Tail");
+                    throw new PSInvalidOperationException(message);
+                }
 
-
+                if (this.Context_MyInvocation.BoundParameters.ContainsKey("Delimiter"))
+                {
+                    string message = StringUtil.Format(FileSystemProviderStrings.NoFirstLastWaitForRaw, "Raw", "Delimiter");
+                    throw new PSInvalidOperationException(message);
+                }
+            }
+        }
 
     }
 }

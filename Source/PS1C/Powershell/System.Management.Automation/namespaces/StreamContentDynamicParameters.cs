@@ -22,8 +22,8 @@ namespace Microsoft.PowerShell.Commands
         /// reading data from the file.
         /// </summary>
         [Parameter]
-        //[ArgumentToEncodingTransformationAttribute()]
-        //[ArgumentEncodingCompletionsAttribute]
+        [ArgumentToEncodingTransformationAttribute()]
+        [ArgumentEncodingCompletionsAttribute]
         [ValidateNotNullOrEmpty]
         public Encoding Encoding
         {
@@ -40,16 +40,21 @@ namespace Microsoft.PowerShell.Commands
             }
         }
 
-        //private Encoding _encoding;// = ClrFacade.GetDefaultEncoding();
-        private Encoding _encoding = Encoding.Default;
-        //private Microsoft.PowerShell.Commands.FileSystemCmdletProviderEncoding _encoding = Microsoft.PowerShell.Commands.FileSystemCmdletProviderEncoding.Default;
-
+        private Encoding _encoding = ClrFacade.GetDefaultEncoding();
 
         /// <summary>
         /// Return file contents as a byte stream or create file from a series of bytes.
         /// </summary>
         [Parameter]
         public SwitchParameter AsByteStream { get; set; }
+
+#if !UNIX
+        /// <summary>
+        /// A parameter to return a stream of an item.
+        /// </summary>
+        [Parameter]
+        public string Stream { get; set; }
+#endif
 
         /// <summary>
         /// Gets the status of the StreamType parameter.  Returns true
@@ -63,6 +68,7 @@ namespace Microsoft.PowerShell.Commands
     /// Defines the dynamic parameters used by the set-content and
     /// add-content cmdlets.
     /// </summary>
+
     public class StreamContentWriterDynamicParameters : StreamContentDynamicParameterBase
     {
         /// <summary>
@@ -110,7 +116,6 @@ namespace Microsoft.PowerShell.Commands
         }
 
         private string _delimiter = "\n";
-
         
         /// <summary>
         /// When the Raw switch is present, we don't do any breaks on newlines,
@@ -141,5 +146,33 @@ namespace Microsoft.PowerShell.Commands
             get; private set;
             // get
         }
+
+        /// <summary>
+        /// The number of content items to retrieve from the back of the file.
+        /// </summary>
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        // [Alias("Last")]
+        public int Trail
+        {
+            set
+            {
+                _backCount = value;
+                _tailSpecified = true;
+            }
+
+            get { return _backCount; }
+        }
+
+        private int _backCount = -1;
+        private bool _tailSpecified = false;
+
+    }
+
+        /// <summary>
+    /// Defines the dynamic parameters used by the Clear-Content cmdlet.
+    /// </summary>
+    public class StreamContentClearContentDynamicParameters
+    {
+
     }
 }

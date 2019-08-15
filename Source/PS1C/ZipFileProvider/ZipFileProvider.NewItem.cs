@@ -87,8 +87,6 @@ namespace PS1C
         }
 
         #endregion
-
-
         #region HasChildItems
 
         /// <summary>
@@ -123,7 +121,6 @@ namespace PS1C
             return true;
         }
         #endregion
-
         #region RemoveItem
 
         /// <summary>

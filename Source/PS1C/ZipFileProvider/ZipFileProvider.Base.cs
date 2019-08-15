@@ -25,7 +25,13 @@ namespace PS1C
         /// object needs to be stateless, the constructor does nothing.
         /// </summary>
 
+        // Workaround for internal class objects
+        internal InvocationInfo Context_MyInvocation {
+            get {
+                return (InvocationInfo)SessionState.PSVariable.Get("MyInvocation").Value;
+            }
 
+        }
 
     }
 
