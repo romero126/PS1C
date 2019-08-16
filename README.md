@@ -16,7 +16,7 @@
 
 ### Example Usage
 
-```bash
+```smalltalk
 import-module "path\PS1C.dll"
 new-psdrive -name APPX -psprovider PS1C -root "$($pwd.path)\ZipFile.zip"
 cd APPX:
