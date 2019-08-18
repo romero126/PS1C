@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 Describe "Set-Content cmdlet tests" -Tags "CI" {
     BeforeAll {
-        Import-Module .\Source\PS1C\bin\Debug\netcoreapp3.0\ps1c.dll
+        Import-Module .\Source\PS1C\bin\Debug\netcoreapp3.0\ps1c.psd1 -Force
         New-PSDrive -Name PSProvider -PSProvider ZipFile -root "$PSScriptRoot\ZipFile.Zip" -ErrorAction "Stop"
         $testdrive = "PSProvider:\"
 

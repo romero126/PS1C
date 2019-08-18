@@ -5,7 +5,7 @@ Describe "Get-Content" -Tags "CI" {
 
     beforeall {
         
-        Import-Module .\Source\PS1C\bin\Debug\netcoreapp3.0\ps1c.dll
+        Import-Module .\Source\PS1C\bin\Debug\netcoreapp3.0\ps1c.psd1 -Force
         New-PSDrive -Name PSProvider -PSProvider ZipFile -root "$PSScriptRoot\ZipFile.Zip" -ErrorAction "Stop"
         $TestDrive = "PSProvider:\"
 
@@ -74,7 +74,7 @@ Describe "Get-Content" -Tags "CI" {
         $content.Count | Should -Be 1
         $content | Should -BeOfType "System.String"
     }
-
+    
     It "Should deliver an array object when listing a file with multiple lines and the correct information from a file" {
         $content = (Get-Content -Path $testPath2)
         @(Compare-Object $content $testString2.Split($nl) -SyncWindow 0).Length | Should -Be 0
@@ -269,50 +269,47 @@ baz
         for ($i = 0; $i -lt $result.Length ; $i++) { $result[$i]    | Should -BeExactly $expected[$i]}
     }
 
-    It "Should support NTFS streams using colon syntax" -Skip:(!$IsWindows) {
-        Set-Content "${testPath}:Stream" -Value "Foo"
-        { Test-Path "${testPath}:Stream" | Should -Throw -ErrorId "ItemExistsNotSupportedError,Microsoft.PowerShell.Commands,TestPathCommand" }
-        Get-Content "${testPath}:Stream" | Should -BeExactly "Foo"
-        Get-Content $testPath | Should -BeExactly $testString
-    }
+    # It "Should support NTFS streams using colon syntax" -Skip:(!$IsWindows) {
+    #     Set-Content "${testPath}:Stream" -Value "Foo"
+    #     { Test-Path "${testPath}:Stream" | Should -Throw -ErrorId "ItemExistsNotSupportedError,Microsoft.PowerShell.Commands,TestPathCommand" }
+    #     Get-Content "${testPath}:Stream" | Should -BeExactly "Foo"
+    #     Get-Content $testPath | Should -BeExactly $testString
+    # }
 
-    It "Should support NTFS streams using -Stream" -Skip:(!$IsWindows) {
-        Set-ItResult -Inconclusive -Because "-Tail is not supported in custom proviers"
-
-        # Set-Content -Path $testPath -Stream hello -Value World
-        # Get-Content -Path $testPath | Should -BeExactly $testString
-        # Get-Content -Path $testPath -Stream hello | Should -BeExactly "World"
-        # $item = Get-Item -Path $testPath -Stream hello
-        # $item | Should -BeOfType 'System.Management.Automation.Internal.AlternateStreamData'
-        # $item.Stream | Should -BeExactly "hello"
-        # Clear-Content -Path $testPath -Stream hello
-        # Get-Content -Path $testPath -Stream hello | Should -BeNullOrEmpty
-        # Remove-Item -Path $testPath -Stream hello
-        # { Get-Content -Path $testPath -Stream hello | Should -Throw -ErrorId "GetContentReaderFileNotFoundError,Microsoft.PowerShell.Commands.GetContentCommand" }
-    }
+    # It "Should support NTFS streams using -Stream" -Skip:(!$IsWindows) {
+    #     Set-Content -Path $testPath -Stream hello -Value World
+    #     Get-Content -Path $testPath | Should -BeExactly $testString
+    #     Get-Content -Path $testPath -Stream hello | Should -BeExactly "World"
+    #     $item = Get-Item -Path $testPath -Stream hello
+    #     $item | Should -BeOfType 'System.Management.Automation.Internal.AlternateStreamData'
+    #     $item.Stream | Should -BeExactly "hello"
+    #     Clear-Content -Path $testPath -Stream hello
+    #     Get-Content -Path $testPath -Stream hello | Should -BeNullOrEmpty
+    #     Remove-Item -Path $testPath -Stream hello
+    #     { Get-Content -Path $testPath -Stream hello | Should -Throw -ErrorId "GetContentReaderFileNotFoundError,Microsoft.PowerShell.Commands.GetContentCommand" }
+    # }
     
-    It "Should support colons in filename on Linux/Mac" -Skip:($IsWindows) {
-        Set-Content "${testPath}:Stream" -Value "Hello"
-        "${testPath}:Stream" | Should -Exist
-        Get-Content "${testPath}:Stream" | Should -BeExactly "Hello"
-    }
+    # It "Should support colons in filename on Linux/Mac" -Skip:($IsWindows) {
+    #     Set-Content "${testPath}:Stream" -Value "Hello"
+    #     "${testPath}:Stream" | Should -Exist
+    #     Get-Content "${testPath}:Stream" | Should -BeExactly "Hello"
+    # }
     
-    It "-Stream is not a valid parameter for <cmdlet> on Linux/Mac" -Skip:($IsWindows) -TestCases @(
-        @{cmdlet="Get-Content"},
-        @{cmdlet="Set-Content"},
-        @{cmdlet="Clear-Content"},
-        @{cmdlet="Add-Content"},
-        @{cmdlet="Get-Item"},
-        @{cmdlet="Remove-Item"}
-    ) {
-        param($cmdlet)
-        (Get-Command $cmdlet).Parameters["stream"] | Should -BeNullOrEmpty
-    }
+    # It "-Stream is not a valid parameter for <cmdlet> on Linux/Mac" -Skip:($IsWindows) -TestCases @(
+    #     @{cmdlet="Get-Content"},
+    #     @{cmdlet="Set-Content"},
+    #     @{cmdlet="Clear-Content"},
+    #     @{cmdlet="Add-Content"},
+    #     @{cmdlet="Get-Item"},
+    #     @{cmdlet="Remove-Item"}
+    # ) {
+    #     param($cmdlet)
+    #     (Get-Command $cmdlet).Parameters["stream"] | Should -BeNullOrEmpty
+    # }
 
     It "Should return no content when an empty path is used with -Raw switch" {
-        Set-TestInconclusive -Message "Todo: but not supported yet"
-
-        # Get-ChildItem $TestDrive -Filter "*.raw" | Get-Content -Raw | Should -BeNullOrEmpty
+        Set-ItResult -Inconclusive -Because "TODO: Get-ChildItem is failing due to not implimented yet"
+        #Get-ChildItem $TestDrive -Filter "*.raw" | Get-Content -Raw | Should -BeNullOrEmpty
     }
     
     It "Should return no content when -TotalCount value is 0" {

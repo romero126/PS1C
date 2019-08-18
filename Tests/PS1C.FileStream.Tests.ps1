@@ -1,7 +1,7 @@
 describe "PS1C FileStream Tests" {
     beforeall {
         $ArchiveFile = "$PSScriptRoot\ZipFile"
-        Import-Module .\Source\PS1C\bin\Debug\netstandard2.0\ps1c.dll
+        Import-Module .\Source\PS1C\bin\Debug\netstandard2.0\ps1c.psd1 -force
     }
 
     context "Create" {
