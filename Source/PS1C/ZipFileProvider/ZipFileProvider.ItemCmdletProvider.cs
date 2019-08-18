@@ -13,12 +13,13 @@ namespace PS1C
     {
 		#region ItemCmdletProvider
 		
-        protected override bool IsValidPath(string path)
-		{
-			WriteVerbose("[Todo]: Provider IsValidPath(string path)");
-			return true;
-		}
-        
+        // Placeholder commands...
+
+        // Note: we don't use IO.Path.IsPathRooted as this deals with "invalid" i.e. unnormalized paths
+        private static bool IsAbsolutePath(string path)
+        {
+            return true;
+        }
         #endregion
     }
 }
