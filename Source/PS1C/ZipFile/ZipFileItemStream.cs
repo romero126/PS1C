@@ -147,7 +147,7 @@ namespace Microsoft.PowerShell.Commands
 
         public void Dispose()
         {
-
+            base.Dispose();
         }
 
         ~ZipFileItemStream()
