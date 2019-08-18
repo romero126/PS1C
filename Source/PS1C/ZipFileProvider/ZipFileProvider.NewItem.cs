@@ -42,6 +42,7 @@ namespace PS1C
             string type,
             object value)
         {
+
             //ItemType itemType = ItemType.Unknown;
 
             // Verify parameters
@@ -64,7 +65,6 @@ namespace PS1C
             //         return;
             //     }
             // }
-            
             if (ItemExists(path))
             {
                 throw new Exception("File Exists");
@@ -79,8 +79,8 @@ namespace PS1C
                     {
                         writer.Write(value.ToString());
                         writer.Flush();
+                        writer.Dispose();
                     }
-
                 }
             }
 
