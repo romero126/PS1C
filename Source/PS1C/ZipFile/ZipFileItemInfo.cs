@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Management.Automation;
+using System.Management.Automation.Internal;
 
 namespace Microsoft.PowerShell.Commands
 {
@@ -15,6 +17,7 @@ namespace Microsoft.PowerShell.Commands
             get;
             private set;
         }
+
         public DirectoryInfo Directory;                      // {get;}
         public string DirectoryName
         {
@@ -107,7 +110,56 @@ namespace Microsoft.PowerShell.Commands
             archiveEntry = item;
         }
 
+        public ZipFileItemInfo(PSDriveInfo drive, string path)
+        {
+            Drive = drive;
+            using (ZipArchive zipArchive = ZipFile.Open(Drive.Root, ZipArchiveMode.Read))
+            {
+                // Quick Archive 
+                archiveEntry = zipArchive.GetEntry(path);
+                if (archiveEntry == null)
+                {
+                    string error = StringUtil.Format(FileSystemProviderStrings.ItemNotFound, path);
+                    throw new IOException(error);
+                }
+            }
+        }
         
+        // Simplex search
+        public static List<ZipFileItemInfo> GetFileItemInfo(PSDriveInfo drive, string path)
+        {
+            if (String.IsNullOrEmpty(path))
+            {
+                throw PSTraceSource.NewArgumentNullException("path");
+            }
+
+            List<ZipFileItemInfo> results = new List<ZipFileItemInfo>();
+            WildcardPattern wildcardPattern = WildcardPattern.Get(path + "*", WildcardOptions.IgnoreCase | WildcardOptions.Compiled);
+
+
+            using (ZipArchive zipArchive = ZipFile.Open(drive.Root, ZipArchiveMode.Read))
+            {
+                foreach (ZipArchiveEntry zipArchiveEntry in zipArchive.Entries)
+                {
+                    if (wildcardPattern.IsMatch(zipArchiveEntry.FullName))
+                    {
+                        results.Add(new ZipFileItemInfo(zipArchiveEntry, drive) );
+                    }
+                }
+            }
+
+            if (results.Count == 0)
+            {
+                return null;
+            }
+
+            //Console.WriteLine("Results Are as follows");
+            //foreach (var v in results)
+            //{
+            //    Console.WriteLine($": {v.FullName}");
+            //}
+            return results;
+        }
         //Methods
         public StreamWriter AppendText()
         {
@@ -158,10 +210,8 @@ namespace Microsoft.PowerShell.Commands
         
         //MoveTo                    Method         void MoveTo(string destFileName)
 
-        //Open                      Method         System.IO.FileStream Open(System.IO.FileMode mode), System.IO.FileStream Op...
         public ZipFileItemStream Open(FileMode mode)
         {
-            
             return new ZipFileItemStream(Drive.Root, archiveEntry.FullName, mode);
         }
 
