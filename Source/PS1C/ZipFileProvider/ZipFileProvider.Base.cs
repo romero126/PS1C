@@ -5,7 +5,8 @@ using System.Management.Automation.Provider;
 namespace PS1C
 {
 	//[CmdletProvider("PS1C", ProviderCapabilities.ShouldProcess)]
-    [CmdletProvider(ZipFileProvider.ProviderName, ProviderCapabilities.Credentials | ProviderCapabilities.Filter | ProviderCapabilities.ShouldProcess)]
+    //[CmdletProvider(ZipFileProvider.ProviderName, ProviderCapabilities.Credentials | ProviderCapabilities.Filter | ProviderCapabilities.ShouldProcess)]
+    [CmdletProvider(ZipFileProvider.ProviderName, ProviderCapabilities.Credentials | ProviderCapabilities.ShouldProcess)]
 
 
     public partial class ZipFileProvider : NavigationCmdletProvider,
@@ -14,7 +15,6 @@ namespace PS1C
     //                                       ISecurityDescriptorCmdletProvider,
     //                                       ICmdletProviderSupportsHelp
     {
-
         /// <summary>
         /// Gets the name of the provider.
         /// </summary>
