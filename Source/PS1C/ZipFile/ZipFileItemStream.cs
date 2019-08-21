@@ -107,6 +107,12 @@ namespace Microsoft.PowerShell.Commands
             _zipArchive = System.IO.Compression.ZipFile.Open(archiveName, zipArchiveMode);
             _zipArchiveEntry = _zipArchive.GetEntry(path);
 
+            if (_zipArchiveEntry.Length >= (int.MaxValue -56))
+            {
+                // Note: 2gb - 57 is max va
+                throw PSTraceSource.NewArgumentOutOfRangeException(FileSystemProviderStrings.DriveMaxSizeError, "ZipFile Items must be below 2gb");
+            }
+
             _zipArchiveEntryStream = _zipArchiveEntry.Open();
             this._stream = new MemoryStream();
 
