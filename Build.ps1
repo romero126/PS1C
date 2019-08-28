@@ -75,6 +75,7 @@ function Pull-File
 #Pull-File -URI "System.Management.Automation/utils/ClrFacade.cs"
 #Pull-File -URI "System.Management.Automation/CoreCLR/CorePsPlatform.cs"
 #Pull-File -URI "System.Management.Automation/engine/Attributes.cs"
+#Pull-File -uri "System.Management.Automation/engine/Utils.cs"
 
 Write-Host ""
 Write-Host "Building"
@@ -88,6 +89,7 @@ dotnet build .\Source\PS1C\ -v q | Select-String "Error" | Select -unique | Writ
 #$PSPath = "C:\Program Files\PowerShell\6\pwsh.exe"
 $PSPath = "C:\Program Files\PowerShell\7-preview\pwsh.exe"
 
+#$PSPath = "C:\Program Files\PowerShell\6\pwsh.exe"
 & $PSPath -Command ". .\test.ps1"
 
 #Start-Process $PSPath -ArgumentList { -NoExit -Command ". { .\test.ps1 }" } -Wait

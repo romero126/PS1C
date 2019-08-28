@@ -21,25 +21,7 @@ namespace PS1C
     {
         #region NavigationCmdletProvider
 
-		protected override bool ItemExists(string path)
-		{
-            //WriteWarning($"[TODO] ItemExists(string path) '{path}'");
-            path = NormalizePath(path);
-            //WriteWarning($"[TODO] ItemExists(string path) '{path}'");
 
-            if (path == "")
-            {
-                return true;
-            }
-            // ZipFileItemInfo results = new ZipFileItemInfo(PSDriveInfo, path);
-            List<ZipFileItemInfo> results = ZipFileItemInfo.GetFileItemInfo(PSDriveInfo, path);
-            
-            if (results != null)
-            {
-                return true;
-            }
-            return false;
-		}
 		protected override bool IsItemContainer(string path)
 		{
             path = NormalizePath(path);
@@ -103,7 +85,7 @@ namespace PS1C
 
         internal ZipFileItemInfo NewItemHelper(string path)
         {
-            path = NormalizePath(path);
+
             try {
                 using (ZipArchive zipArchive = ZipFile.Open(PSDriveInfo.Root, ZipArchiveMode.Update))
                 {
@@ -133,7 +115,6 @@ namespace PS1C
                 path = path.Remove(0, PSDriveInfo.Name.Length+2);
             }
             path = path.Replace(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-
 
             return path;
         }

@@ -13,9 +13,12 @@
             }
         },
         {
-            "label": "Build Self",
+            "label": "Launch File",
             "type": "shell",
-            "command": ". ${file}",
+            "command": "C:\\Program Files\\PowerShell\\7-preview\\pwsh.exe",
+            "args": [
+                "-Command '. ${file}\" '"
+            ],
             "group": {
                 "kind": "build",
                 "isDefault": true

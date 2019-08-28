@@ -235,7 +235,8 @@ namespace PS1C
             {
                 archiveFile = GetItemHelper(path);
             }
-            else {
+            else
+            {
                 // Set-Item should create an item if not exists.
                 archiveFile = NewItemHelper(path);
             }

@@ -16,15 +16,17 @@ namespace PS1C
     {
 
         #region ItemCmdletProvider methods
+
         /// <summary>
         /// Retrieves the dynamic parameters required for the Get-Item cmdlet.
         /// </summary>
         /// <param name="path">The path of the file to process.</param>
         /// <returns>An instance of the FileSystemProviderGetItemDynamicParameters class that represents the dynamic parameters.</returns>
-        // protected override object GetItemDynamicParameters(string path)
-        // {
-        //     return new FileSystemProviderGetItemDynamicParameters();
-        // }
+        protected override object GetItemDynamicParameters(string path)
+        {
+            // return new FileSystemProviderGetItemDynamicParameters();
+            return null;
+        }
 
         /// <summary>
         /// Determines if the specified path is syntactically and semantically valid.
@@ -102,7 +104,6 @@ namespace PS1C
             path = NormalizePath(path);
 
 
-
             // Validate the argument
             bool isContainer = false;
 
@@ -123,16 +124,16 @@ namespace PS1C
                     // Otherwise, return the item itself.
                     WriteItemObject(result, result.FullName, isContainer);
                 }
-                // else
-                // {
-                //     string error = StringUtil.Format(FileSystemProviderStrings.ItemNotFound, path);
-                //     Exception e = new IOException(error);
-                //     WriteError(new ErrorRecord(
-                //         e,
-                //         "ItemNotFound",
-                //         ErrorCategory.ObjectNotFound,
-                //         path));
-                // }
+                else
+                {
+                    string error = StringUtil.Format(FileSystemProviderStrings.ItemNotFound, path);
+                    Exception e = new IOException(error);
+                    WriteError(new ErrorRecord(
+                        e,
+                        "ItemNotFound",
+                        ErrorCategory.ObjectNotFound,
+                        path));
+                }
             }
             catch (IOException ioError)
             {
@@ -146,7 +147,78 @@ namespace PS1C
             }
         }
 
-        #endregion
+        /// <summary>
+        /// Invokes the item at the path using ShellExecute semantics.
+        /// </summary>
+        ///
+        /// <param name="path">
+        /// The item to invoke.
+        /// </param>
+        ///
+        /// <exception cref="System.ArgumentException">
+        ///     path is null or empty.
+        /// </exception>
+        protected override void InvokeDefaultAction(string path)
+        {
+            if (String.IsNullOrEmpty(path))
+            {
+                throw PSTraceSource.NewArgumentException("path");
+            }
 
+            path = NormalizePath(path);
+
+            string action = FileSystemProviderStrings.InvokeItemAction;
+
+            string resource = StringUtil.Format(FileSystemProviderStrings.InvokeItemResourceFileTemplate, path);
+
+            if (ShouldProcess(resource, action))
+            {
+                var invokeProcess = new System.Diagnostics.Process();
+                invokeProcess.StartInfo.FileName = path;
+#if UNIX
+                // bool invokeDefaultProgram = false;
+                // if (Directory.Exists(path))
+                // {
+                //     // Path points to a directory. We have to use xdg-open/open on Linux/macOS.
+                //     invokeDefaultProgram = true;
+                // }
+                // else
+                // {
+                //     try
+                //     {
+                //         // Try Process.Start first. This works for executables on Win/Unix platforms
+                //         invokeProcess.Start();
+                //     }
+                //     catch (Win32Exception ex) when (ex.NativeErrorCode == 13)
+                //     {
+                //         // Error code 13 -- Permission denied
+                //         // The file is possibly not an executable. We try xdg-open/open on Linux/macOS.
+                //         invokeDefaultProgram = true;
+                //     }
+                // }
+
+                // if (invokeDefaultProgram)
+                // {
+                //     const string quoteFormat = "\"{0}\"";
+                //     invokeProcess.StartInfo.FileName = Platform.IsLinux ? "xdg-open" : /* macOS */ "open";
+                //     if (NativeCommandParameterBinder.NeedQuotes(path))
+                //     {
+                //         path = string.Format(CultureInfo.InvariantCulture, quoteFormat, path);
+                //     }
+                //     invokeProcess.StartInfo.Arguments = path;
+                //     invokeProcess.Start();
+                // }
+#else
+                // Use ShellExecute when it's not a headless SKU
+                // invokeProcess.StartInfo.UseShellExecute = Platform.IsWindowsDesktop;
+                // invokeProcess.Start();
+#endif
+                throw new Exception("The following Invoke Subsystem is not Implimented");
+            }
+        } // InvokeDefaultAction
+        
+        #endregion ItemCmdletProvider members
+
+        
     }
 }

@@ -117,6 +117,7 @@ namespace Microsoft.PowerShell.Commands
             {
                 // Quick Archive 
                 archiveEntry = zipArchive.GetEntry(path);
+
                 if (archiveEntry == null)
                 {
                     string error = StringUtil.Format(FileSystemProviderStrings.ItemNotFound, path);
