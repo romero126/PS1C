@@ -84,14 +84,42 @@ namespace PS1C
                 throw PSTraceSource.NewArgumentException("newName", FileSystemProviderStrings.RenameError);
             }
             
-            
-            // Manually move this item since you cant have more than one stream open at a time.
-            ZipFileItemInfo entry = new ZipFileItemInfo(PSDriveInfo, path);
+            try
+            {           
+                // Manually move this item since you cant have more than one stream open at a time.
+                ZipFileItemInfo file = new ZipFileItemInfo(PSDriveInfo, path);
+                ZipFileItemInfo result;
 
-            entry.MoveTo(newName);
+                // Confirm the rename with the user
 
+                string action = FileSystemProviderStrings.RenameItemActionFile;
+
+                string resource = StringUtil.Format(FileSystemProviderStrings.RenameItemResourceFileTemplate, file.FullName, newName);
+
+                if (ShouldProcess(resource, action))
+                {
+                    // Now move the file
+                    file.MoveTo(newName);
+
+                    result = file;
+                    WriteItemObject(result, result.FullName, false);
+                }
+            }
+            catch (ArgumentException argException)
+            {
+                WriteError(new ErrorRecord(argException, "RenameItemArgumentError", ErrorCategory.InvalidArgument, path));
+            }
+            catch (IOException ioException)
+            {
+                //IOException contains specific message about the error occured and so no need for errordetails.
+                WriteError(new ErrorRecord(ioException, "RenameItemIOError", ErrorCategory.WriteError, path));
+            }
+            catch (UnauthorizedAccessException accessException)
+            {
+                WriteError(new ErrorRecord(accessException, "RenameItemUnauthorizedAccessError", ErrorCategory.PermissionDenied, path));
+            }
         }
-
+        
         #endregion RenameItem
 
         #region NewItem
