@@ -110,18 +110,38 @@ namespace Microsoft.PowerShell.Commands
             archiveEntry = item;
         }
 
-        public ZipFileItemInfo(PSDriveInfo drive, string path)
+        public ZipFileItemInfo(PSDriveInfo drive, string path) : this(drive, path, false)
+        {
+
+        }
+
+        public ZipFileItemInfo(PSDriveInfo drive, string path, bool createEntry)
         {
             Drive = drive;
-            using (ZipArchive zipArchive = ZipFile.Open(Drive.Root, ZipArchiveMode.Read))
+            using (ZipArchive zipArchive = ZipFile.Open(drive.Root, ZipArchiveMode.Update))
             {
                 // Quick Archive 
                 archiveEntry = zipArchive.GetEntry(path);
 
                 if (archiveEntry == null)
                 {
-                    string error = StringUtil.Format(FileSystemProviderStrings.ItemNotFound, path);
-                    throw new IOException(error);
+                    if (createEntry == true)
+                    {
+
+                        // Create an entry if not exists
+                        zipArchive.CreateEntry(path);
+                        archiveEntry = zipArchive.GetEntry(path);
+                        if (archiveEntry == null)
+                        {
+                            throw new IOException(FileSystemProviderStrings.PermissionError);
+                        }
+
+                    }
+                    else
+                    {
+                        string error = StringUtil.Format(FileSystemProviderStrings.ItemNotFound, path);
+                        throw new IOException(error);
+                    }
                 }
             }
         }
@@ -192,6 +212,7 @@ namespace Microsoft.PowerShell.Commands
             }
 
         }
+
         
         //Encrypt                   Method         void Encrypt()
         
@@ -210,6 +231,27 @@ namespace Microsoft.PowerShell.Commands
         //InitializeLifetimeService Method         System.Object InitializeLifetimeService()
         
         //MoveTo                    Method         void MoveTo(string destFileName)
+
+        public void MoveTo(string destFileName)
+        {
+            // Check if I can move to a file
+
+            using (ZipArchive zipArchive = ZipFile.Open(Drive.Root, ZipArchiveMode.Update))
+            {
+                ZipArchiveEntry thisEntry = zipArchive.GetEntry(archiveEntry.FullName);
+                ZipArchiveEntry newEntry = zipArchive.GetEntry(destFileName);
+                if (newEntry == null) {
+                    newEntry = zipArchive.CreateEntry(destFileName);
+                }
+
+                using (Stream thisStream = thisEntry.Open())
+                using (Stream newStream = newEntry.Open())
+                {
+                    thisStream.CopyTo(newStream);
+                }
+                thisEntry.Delete();
+            }
+        }
 
         public ZipFileItemStream Open(FileMode mode)
         {
