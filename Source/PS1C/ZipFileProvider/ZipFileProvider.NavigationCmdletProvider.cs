@@ -44,15 +44,6 @@ namespace PS1C
             }
             // WriteWarning($"[TODO] GetChildItems(string path) '{path}'");            
 
-
-            //ZipFileDirectoryInfo DirInfo = new ZipFileDirectoryInfo(PSDriveInfo);
-            //using (ZipArchive zipArchive = ZipFile.OpenRead(PSDriveInfo.Root)) {
-			//	foreach (ZipArchiveEntry zipArchiveEntry in zipArchive.Entries) {
-            //        ZipFileItemInfo OutputItem = new ZipFileItemInfo(zipArchiveEntry, PSDriveInfo);
-            //        WriteItemObject(OutputItem, OutputItem.FullName, true);
-			//	}
-			//}
-
             List<ZipFileItemInfo> results = ZipFileItemInfo.GetFileItemInfo(PSDriveInfo, path);
             foreach (ZipFileItemInfo entry in results)
             {
@@ -60,21 +51,6 @@ namespace PS1C
             }
 		}
 
-        //protected override void GetItem(string path)
-		//{
-        //    string filepath = path.Remove(0, PSDriveInfo.Root.Length+1);
-        //
-        //    try {
-        //        using (ZipArchive archive = ZipFile.OpenRead(PSDriveInfo.Root)) {
-        //            ZipArchiveEntry entry = archive.GetEntry(filepath);
-        //            ZipFileItemInfo OutputItem = new ZipFileItemInfo(entry, PSDriveInfo);
-        //            WriteItemObject(OutputItem, OutputItem.FullName, false);
-        //        }
-        //    }
-        //    catch (Exception e) {
-        //        throw e;
-        //    }
-		//}
         internal ZipFileItemInfo GetItemHelper(string path)
 		{
             path = NormalizePath(path);
