@@ -25,6 +25,73 @@ namespace PS1C
         #endregion GetChildNames
 
         #region RenameItem
+
+        /// <summary>
+        /// Renames a file or directory.
+        /// </summary>
+        ///
+        /// <param name="path">
+        /// The current full path to the file or directory.
+        /// </param>
+        ///
+        /// <param name="newName">
+        /// The new full path to the file or directory.
+        /// </param>
+        ///
+        /// <returns>
+        /// Nothing.  The renamed DirectoryInfo or FileInfo object is
+        /// written to the context's pipeline.
+        /// </returns>
+        ///
+        /// <exception cref="System.ArgumentException">
+        ///     path is null or empty.
+        ///     newName is null or empty
+        /// </exception>
+        protected override void RenameItem(string path, string newName)
+        {
+
+            // Check the parameters
+            if (String.IsNullOrEmpty(path))
+            {
+                throw PSTraceSource.NewArgumentException("path");
+            }
+
+            path = NormalizePath(path);
+
+            if (String.IsNullOrEmpty(newName))
+            {
+                throw PSTraceSource.NewArgumentException("newName");
+            }
+
+            newName = NormalizePath(newName);
+
+            // Clean up "newname" to fix some common usability problems:
+            // Rename .\foo.txt .\bar.txt
+            // Rename c:\temp\foo.txt c:\temp\bar.txt
+            if (newName.StartsWith(".\\", StringComparison.OrdinalIgnoreCase) ||
+                newName.StartsWith("./", StringComparison.OrdinalIgnoreCase))
+            {
+                newName = newName.Remove(0, 2);
+            }
+            //else if (String.Equals(Path.GetDirectoryName(path), Path.GetDirectoryName(newName), StringComparison.OrdinalIgnoreCase))
+            //{
+            //    newName = Path.GetFileName(newName);
+            //}
+
+            // Check to see if the target specified exists. 
+            if (ItemExists(newName))
+            {
+                throw PSTraceSource.NewArgumentException("newName", FileSystemProviderStrings.RenameError);
+            }
+            
+            
+            // Manually move this item since you cant have more than one stream open at a time.
+            ZipFileItemInfo entry = new ZipFileItemInfo(PSDriveInfo, path);
+
+            entry.MoveTo(newName);
+
+        }
+
         #endregion RenameItem
 
         #region NewItem
@@ -217,6 +284,10 @@ namespace PS1C
 
             path = NormalizePath(path);
 
+            if (String.IsNullOrEmpty(path))
+            {
+                return true;
+            }
             try
             {
                 bool notUsed;
