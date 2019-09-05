@@ -63,7 +63,8 @@ namespace PS1C
                 throw PSTraceSource.NewArgumentException("newName");
             }
 
-            newName = NormalizePath(newName);
+            // Console.WriteLine("Rename-Item destPath=" + newName);
+            // newName = NormalizePath(newName);
 
             // Clean up "newname" to fix some common usability problems:
             // Rename .\foo.txt .\bar.txt
@@ -73,10 +74,17 @@ namespace PS1C
             {
                 newName = newName.Remove(0, 2);
             }
-            //else if (String.Equals(Path.GetDirectoryName(path), Path.GetDirectoryName(newName), StringComparison.OrdinalIgnoreCase))
-            //{
-            //    newName = Path.GetFileName(newName);
-            //}
+            // else if (String.Equals(Path.GetDirectoryName(path), Path.GetDirectoryName(newName), StringComparison.OrdinalIgnoreCase))
+            // {
+            //     newName = Path.GetFileName(newName);
+            // }
+
+            //Check to see if the target specified is just filename. We dont allow rename to move the file to a different directory.
+            //If a path is specified for the newName then we flag that as an error.
+            // if (String.Compare(Path.GetFileName(newName), newName, StringComparison.OrdinalIgnoreCase) != 0)
+            // {
+            //     throw PSTraceSource.NewArgumentException("newName", FileSystemProviderStrings.RenameError);
+            // }
 
             // Check to see if the target specified exists. 
             if (ItemExists(newName))
@@ -96,9 +104,16 @@ namespace PS1C
 
                 string resource = StringUtil.Format(FileSystemProviderStrings.RenameItemResourceFileTemplate, file.FullName, newName);
 
+
                 if (ShouldProcess(resource, action))
                 {
                     // Now move the file
+                    // Validate Current PWD is not the Provider
+                    //if ((!Path.IsPathFullyQualified(newName)) && (!SessionState.Path.CurrentLocation.Path.StartsWith(PSDriveInfo.Name + ":")) )
+                    //{
+                    //    newName = Path.Join(SessionState.Path.CurrentLocation.Path, newName);
+                    //}
+
                     file.MoveTo(newName);
 
                     result = file;
@@ -119,7 +134,7 @@ namespace PS1C
                 WriteError(new ErrorRecord(accessException, "RenameItemUnauthorizedAccessError", ErrorCategory.PermissionDenied, path));
             }
         }
-        
+
         #endregion RenameItem
 
         #region NewItem
@@ -423,7 +438,104 @@ namespace PS1C
         #endregion HasChildItems
         
         #region CopyItem
-        
+        /// <summary>
+        /// Copies an item at the specified path to the given destination.
+        /// </summary>
+        ///
+        /// <param name="path">
+        /// The path of the item to copy.
+        /// </param>
+        ///
+        /// <param name="destinationPath">
+        /// The path of the destination.
+        /// </param>
+        ///
+        /// <param name="recurse">
+        /// Specifies if the operation should also copy child items.
+        /// </param>
+        ///
+        /// <exception cref="System.ArgumentException">
+        ///     path is null or empty.
+        ///     destination path is null or empty.
+        /// </exception>
+        ///
+        /// <returns>
+        /// Nothing.  Copied items are written to the context's pipeline.
+        /// </returns>
+        protected override void CopyItem(
+            string path,
+            string destinationPath,
+            bool recurse)
+        {
+            if (String.IsNullOrEmpty(path))
+            {
+                throw PSTraceSource.NewArgumentException("path");
+            }
+
+            if (String.IsNullOrEmpty(destinationPath))
+            {
+                throw PSTraceSource.NewArgumentException("destinationPath");
+            }
+
+            path = NormalizePath(path);
+            destinationPath = NormalizePath(destinationPath);
+
+            //PSSession fromSession = null;
+            //PSSession toSession = null;
+
+            // CopyItemDynamicParameters copyDynamicParameter = DynamicParameters as CopyItemDynamicParameters;
+
+            //if (copyDynamicParameter != null)
+            //{
+            //    if (copyDynamicParameter.FromSession != null)
+            //    {
+            //        fromSession = copyDynamicParameter.FromSession;
+            //    }
+            //    else
+            //    {
+            //        toSession = copyDynamicParameter.ToSession;
+            //    }
+            //}
+
+            //_excludeMatcher = SessionStateUtilities.CreateWildcardsFromStrings(Exclude, WildcardOptions.IgnoreCase);
+
+            // if the source and destination path are same (for a local copy) then flag it as error.
+            //if ((toSession == null) && (fromSession == null) && InternalSymbolicLinkLinkCodeMethods.IsSameFileSystemItem(path, destinationPath))
+            //{
+            //    String error = StringUtil.Format(FileSystemProviderStrings.CopyError, path);
+            //    Exception e = new IOException(error);
+            //    e.Data[SelfCopyDataKey] = destinationPath;
+            //    WriteError(new ErrorRecord(e, "CopyError", ErrorCategory.WriteError, path));
+            //    return;
+            //}
+            // Copy-Item from session
+            //if (fromSession != null)
+            //{
+            //    CopyItemFromRemoteSession(path, destinationPath, recurse, Force, fromSession);
+            //}
+
+            //else
+            //{
+            //    // Copy-Item to session
+            //    if (toSession != null)
+            //    {
+            //        using (System.Management.Automation.PowerShell ps = System.Management.Automation.PowerShell.Create())
+            //        {
+            //            ps.Runspace = toSession.Runspace;
+            //            CopyItemLocalOrToSession(path, destinationPath, recurse, Force, ps);
+            //        }
+            //    }
+
+                // Copy-Item local
+            //    else
+            //    {
+            //        CopyItemLocalOrToSession(path, destinationPath, recurse, Force, null);
+            //    }
+            //}
+
+            //_excludeMatcher.Clear();
+            //_excludeMatcher = null;
+        }
         #endregion CopyItem
         
         #endregion ContainerCmdletProvider members
