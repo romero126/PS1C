@@ -117,7 +117,23 @@ namespace Microsoft.PowerShell.Commands
 
         public ZipFileItemInfo(PSDriveInfo drive, string path, bool createEntry)
         {
+            if (String.IsNullOrEmpty(path))
+            {
+                throw PSTraceSource.NewArgumentNullException("path");
+            }
+
             Drive = drive;
+
+            if (path.StartsWith(Drive.Name))
+            {
+                path = Path.GetRelativePath(Drive.Name + ":\\", path);
+            }
+
+            if (path.Contains( Path.VolumeSeparatorChar))
+            {
+                throw PSTraceSource.NewArgumentException(path);
+            }
+
             using (ZipArchive zipArchive = ZipFile.Open(drive.Root, ZipArchiveMode.Update))
             {
                 // Quick Archive 
@@ -127,7 +143,6 @@ namespace Microsoft.PowerShell.Commands
                 {
                     if (createEntry == true)
                     {
-
                         // Create an entry if not exists
                         zipArchive.CreateEntry(path);
                         archiveEntry = zipArchive.GetEntry(path);
