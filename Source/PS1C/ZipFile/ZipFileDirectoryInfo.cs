@@ -110,11 +110,6 @@ namespace Microsoft.PowerShell.Commands
 			}
 
         }
-        public void Add(ZipFileItemInfo Item)
-        {
-
-        }
-
         public ZipFileDirectoryInfo(ZipFileDirectoryInfo root)
         {
             Root = root;
