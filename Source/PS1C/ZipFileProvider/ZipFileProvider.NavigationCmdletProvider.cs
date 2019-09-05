@@ -54,29 +54,29 @@ namespace PS1C
         internal ZipFileItemInfo GetItemHelper(string path)
 		{
             path = NormalizePath(path);
-            
+
             return new ZipFileItemInfo(PSDriveInfo, path);
 		}
 
 
         internal ZipFileItemInfo NewItemHelper(string path)
         {
-
-            try {
-                using (ZipArchive zipArchive = ZipFile.Open(PSDriveInfo.Root, ZipArchiveMode.Update))
-                {
-                    path = NormalizePath(path);
-                    ZipArchiveEntry zipArchiveEntry = zipArchive.CreateEntry(path);
-
-                    ZipFileItemInfo zipFileItemInfo = new ZipFileItemInfo(zipArchiveEntry, PSDriveInfo);
-
-                    return zipFileItemInfo;
-                    
-                }
-            }
-            catch (Exception e) {
-                throw e;
-            }
+            throw new Exception("NewItemHelper is deprecated");
+            //try {
+            //    using (ZipArchive zipArchive = ZipFile.Open(PSDriveInfo.Root, ZipArchiveMode.Update))
+            //    {
+            //        path = NormalizePath(path);
+            //        ZipArchiveEntry zipArchiveEntry = zipArchive.CreateEntry(path);
+//
+            //        ZipFileItemInfo zipFileItemInfo = new ZipFileItemInfo(zipArchiveEntry, PSDriveInfo);
+//
+            //        return zipFileItemInfo;
+            //        
+            //    }
+            //}
+            //catch (Exception e) {
+            //    throw e;
+            //}
         }
         private string NormalizePath(string path)
         {
