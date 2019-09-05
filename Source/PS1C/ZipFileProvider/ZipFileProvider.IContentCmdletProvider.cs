@@ -90,7 +90,7 @@ namespace PS1C
             }
             StreamContentReaderWriter stream = null;
 
-            ZipFileItemInfo archiveFile = GetItemHelper(path);
+            ZipFileItemInfo archiveFile = new ZipFileItemInfo(PSDriveInfo, path);
             //Archive.FileStream archiveStream = archiveFile.Open(FileMode.Append);
 
             try
@@ -230,16 +230,7 @@ namespace PS1C
 
             StreamContentReaderWriter stream = null;
 
-            ZipFileItemInfo archiveFile;
-            if (ItemExists(path))
-            {
-                archiveFile = GetItemHelper(path);
-            }
-            else
-            {
-                // Set-Item should create an item if not exists.
-                archiveFile = NewItemHelper(path);
-            }
+            ZipFileItemInfo archiveFile = new ZipFileItemInfo(PSDriveInfo, path, true);
 
             try
             {
