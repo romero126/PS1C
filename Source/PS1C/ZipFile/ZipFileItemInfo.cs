@@ -234,8 +234,39 @@ namespace Microsoft.PowerShell.Commands
 
         public void MoveTo(string destFileName)
         {
-            // Check if I can move to a file
+            if (Path.IsPathRooted(destFileName))
+            {
+                try
+                {
+                    new DriveInfo(Path.GetPathRoot(destFileName));
+                    CopyToFileSystem(destFileName, true);
+                    return;
+                }
+                catch
+                {
 
+                }
+            }
+
+            CopyToArchive(destFileName, true);
+
+        }
+        private void CopyToFileSystem(string destFileName, bool removeItem)
+        {
+            using (ZipArchive zipArchive = ZipFile.Open(Drive.Root, ZipArchiveMode.Update))
+            {   
+                ZipArchiveEntry thisEntry = zipArchive.GetEntry(archiveEntry.FullName);
+                
+                thisEntry.ExtractToFile(destFileName);
+
+                if (removeItem)
+                {
+                    thisEntry.Delete();
+                }
+            }
+        }
+        private void CopyToArchive(string destFileName, bool removeItem)
+        {
             using (ZipArchive zipArchive = ZipFile.Open(Drive.Root, ZipArchiveMode.Update))
             {
                 ZipArchiveEntry thisEntry = zipArchive.GetEntry(archiveEntry.FullName);
@@ -249,10 +280,12 @@ namespace Microsoft.PowerShell.Commands
                 {
                     thisStream.CopyTo(newStream);
                 }
-                thisEntry.Delete();
+                if (removeItem)
+                {
+                    thisEntry.Delete();
+                }
             }
         }
-
         public ZipFileItemStream Open(FileMode mode)
         {
             return new ZipFileItemStream(Drive.Root, archiveEntry.FullName, mode);
