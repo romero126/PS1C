@@ -36,5 +36,6 @@ All tests of features will be pulled directly from PowerShell's CodeBase in orde
 * Get-Item (Early Development)
 * New-Item
 * Remove-Item
+* Rename-Item
 * Get-Content
 * Set-Content
