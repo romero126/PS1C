@@ -195,7 +195,7 @@ namespace PS1C
 
             if (type == "file")
             {
-                ZipFileItemInfo newItem = NewItemHelper(path);
+                ZipFileItemInfo newItem = new ZipFileItemInfo(PSDriveInfo, path, true);
                 if (value != null)
                 {
                     using (StreamWriter writer = newItem.AppendText())
@@ -245,6 +245,7 @@ namespace PS1C
             path = NormalizePath(path);
             if (!ItemExists(path))
             {
+                Console.WriteLine($"Cannot find path {path}");
                 throw new Exception("Item not exists");
             }
             ZipFileItemInfo ArchiveItem = GetItemHelper(path);
@@ -326,7 +327,7 @@ namespace PS1C
             bool result = false;
 
             path = NormalizePath(path);
-
+            
             if (String.IsNullOrEmpty(path))
             {
                 return true;
@@ -349,30 +350,33 @@ namespace PS1C
                 {
                     // File ZipFile Open and ZipFileItem Open throws the same errors, need to validate
                     // ZipFileItem existance.
-
                     if (ioException.Message != StringUtil.Format(FileSystemProviderStrings.ItemNotFound, path))
                     {
                         throw ioException;
                     }
 
                 }
+                catch (PSArgumentException psArgumentException)
+                {
 
+                }
+                
                 FileSystemItemProviderDynamicParameters itemExistsDynamicParameters =
                     DynamicParameters as FileSystemItemProviderDynamicParameters;
 
                 // If the items see if we need to check the age of the file...
                 if (result && itemExistsDynamicParameters != null)
                 {
-                    DateTime lastWriteTime = File.GetLastWriteTime(path);
+                    // DateTime lastWriteTime = File.GetLastWriteTime(path);
 
-                    if (itemExistsDynamicParameters.OlderThan.HasValue)
-                    {
-                        result = lastWriteTime < itemExistsDynamicParameters.OlderThan.Value;
-                    }
-                    if (itemExistsDynamicParameters.NewerThan.HasValue)
-                    {
-                        result = lastWriteTime > itemExistsDynamicParameters.NewerThan.Value;
-                    }
+                    // if (itemExistsDynamicParameters.OlderThan.HasValue)
+                    // {
+                    //     result = lastWriteTime < itemExistsDynamicParameters.OlderThan.Value;
+                    // }
+                    // if (itemExistsDynamicParameters.NewerThan.HasValue)
+                    // {
+                    //     result = lastWriteTime > itemExistsDynamicParameters.NewerThan.Value;
+                    // }
                 }
             }
             catch (System.Security.SecurityException security)
