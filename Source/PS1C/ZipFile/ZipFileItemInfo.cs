@@ -233,7 +233,7 @@ namespace Microsoft.PowerShell.Commands
         //MoveTo                    Method         void MoveTo(string destFileName)
 
         public void MoveTo(string destFileName)
-        {
+        {            
             if (Path.IsPathRooted(destFileName))
             {
                 try
@@ -244,13 +244,19 @@ namespace Microsoft.PowerShell.Commands
                 }
                 catch
                 {
-
+                    if (destFileName.StartsWith(Drive.Name))
+                    {
+                        destFileName = Path.GetRelativePath( Path.GetPathRoot(destFileName), destFileName );
+                    }
+                    else
+                    {
+                        throw new Exception("unsupported destination path");
+                    }
                 }
             }
-
             CopyToArchive(destFileName, true);
-
         }
+
         private void CopyToFileSystem(string destFileName, bool removeItem)
         {
             using (ZipArchive zipArchive = ZipFile.Open(Drive.Root, ZipArchiveMode.Update))
