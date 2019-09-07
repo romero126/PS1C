@@ -48,7 +48,6 @@ namespace PS1C
             bool recurse,
             uint depth)
         {
-            Console.WriteLine("GetChildItems");
             GetPathItems(path, recurse, depth, false, ReturnContainers.ReturnMatchingContainers);
         } // GetChildItems
 
@@ -80,7 +79,6 @@ namespace PS1C
             string path,
             ReturnContainers returnContainers)
         {
-            Console.WriteLine("GetChildNames");
             GetPathItems(path, false, uint.MaxValue, true, returnContainers);
         } // GetChildNames
 
@@ -144,11 +142,16 @@ namespace PS1C
 
             bool isDirectory = IsItemContainer(path);
             bool exists = ItemExists(path);
-
+            
             path = NormalizePath(path);
 
             if (exists)
             {
+                if (String.IsNullOrEmpty(path))
+                {
+                    path = $"{PSDriveInfo.Name}:\\";
+                }
+                
                 if (isDirectory)
                 {
                     // Only the Root directory is looked at for this scenario. 
