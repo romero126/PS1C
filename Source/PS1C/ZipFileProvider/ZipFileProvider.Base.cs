@@ -4,10 +4,9 @@ using System.Management.Automation.Provider;
 
 namespace PS1C
 {
-	//[CmdletProvider("PS1C", ProviderCapabilities.ShouldProcess)]
-    //[CmdletProvider(ZipFileProvider.ProviderName, ProviderCapabilities.Credentials | ProviderCapabilities.Filter | ProviderCapabilities.ShouldProcess)]
-    [CmdletProvider(ZipFileProvider.ProviderName, ProviderCapabilities.Credentials | ProviderCapabilities.ShouldProcess)]
 
+    //[CmdletProvider(ZipFileProvider.ProviderName, ProviderCapabilities.Credentials | ProviderCapabilities.Filter | ProviderCapabilities.ShouldProcess)]
+    [CmdletProvider(ZipFileProvider.ProviderName, ProviderCapabilities.ShouldProcess | ProviderCapabilities.ExpandWildcards )]
 
     public partial class ZipFileProvider : NavigationCmdletProvider,
                                            IContentCmdletProvider

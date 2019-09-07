@@ -42,13 +42,12 @@ namespace PS1C
         protected override bool IsValidPath(string path)
 		{
             // Path passed should be fully qualified path.
+            Console.WriteLine($"IsValidPath('{path}')");
             if (string.IsNullOrEmpty(path))
             {
                 return false;
             }
 
-
-            Console.WriteLine($"IsValidPath('{path}')");
             // Normalize the path
             path = NormalizePath(path);
             // path = EnsureDriveIsRooted(path);
@@ -103,7 +102,6 @@ namespace PS1C
         {
             path = NormalizePath(path);
 
-
             // Validate the argument
             bool isContainer = false;
 
@@ -116,13 +114,14 @@ namespace PS1C
             try
             {
 
-                ZipFileItemInfo result = new ZipFileItemInfo(PSDriveInfo, path);
+                //ZipFileItemInfo result = new ZipFileItemInfo(PSDriveInfo, path);
+                ZipFileItemInfo[] result = ZipFileItemInfo.GetFileItemInfo(PSDriveInfo, path);
 
                 // FileSystemInfo result = GetFileSystemItem(path, ref isContainer, false);
                 if (result != null)
                 {
                     // Otherwise, return the item itself.
-                    WriteItemObject(result, result.FullName, isContainer);
+                    WriteItemObject(result, path, isContainer);
                 }
                 else
                 {

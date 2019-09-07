@@ -7,6 +7,7 @@ using System.IO.Compression;
 
 namespace Microsoft.PowerShell.Commands
 {
+    #region ZipFileItemStream
     public class ZipFileItemStream : System.IO.Stream
     {
 
@@ -161,4 +162,5 @@ namespace Microsoft.PowerShell.Commands
             Dispose();
         }
     }
+    #endregion ZipFileItemStream
 }

@@ -9,7 +9,9 @@ using System.Text;
 
 namespace PS1C.Archive
 {
-    
+    #region StreamContent
+
+    #region ZipFileContentStream
     public class ZipFileContentStream : StreamContentReaderWriter
     {
 
@@ -45,4 +47,7 @@ namespace PS1C.Archive
         }
 
     }
+    #endregion ZipFileContentStream
+
+    #endregion StreamContent
 }

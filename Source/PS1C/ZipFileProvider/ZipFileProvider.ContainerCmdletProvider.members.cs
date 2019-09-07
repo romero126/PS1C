@@ -3,6 +3,7 @@ using Microsoft.PowerShell.Commands;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Management.Automation;
 using System.Management.Automation.Internal;
 using System.Management.Automation.Provider;
@@ -18,11 +19,197 @@ namespace PS1C
         #region ContainerCmdletProvider members
         
         #region GetChildItems
+        /// <summary>
+        /// Gets the child items of a given directory.
+        /// </summary>
+        ///
+        /// <param name="path">
+        /// The full path of the directory to enumerate.
+        /// </param>
+        ///
+        /// <param name="recurse">
+        /// If true, recursively enumerates the child items as well.
+        /// </param>
+        ///
+        /// <param name="depth">
+        /// Limits the depth of recursion; uint.MaxValue performs full recursion.
+        /// </param>
+        ///
+        /// <returns>
+        /// Nothing.  FileInfo and DirectoryInfo objects that match the filter are written to the
+        /// context's pipeline.
+        /// </returns>
+        ///
+        /// <exception cref="System.ArgumentException">
+        ///     path is null or empty.
+        /// </exception>
+        protected override void GetChildItems(
+            string path,
+            bool recurse,
+            uint depth)
+        {
+            Console.WriteLine("GetChildItems");
+            GetPathItems(path, recurse, depth, false, ReturnContainers.ReturnMatchingContainers);
+        } // GetChildItems
 
         #endregion GetChildItems
 
         #region GetChildNames
+        /// <summary>
+        /// Gets the path names for all children of the specified
+        /// directory that match the given filter.
+        /// </summary>
+        ///
+        /// <param name="path">
+        /// The full path of the directory to enumerate.
+        /// </param>
+        ///
+        /// <param name="returnContainers">
+        /// Determines if all containers should be returned or only those containers that match the
+        /// filter(s).
+        /// </param>
+        ///
+        /// <returns>
+        /// Nothing.  Child names are written to the context's pipeline.
+        /// </returns>
+        ///
+        /// <exception cref="System.ArgumentException">
+        ///     path is null or empty.
+        /// </exception>
+        protected override void GetChildNames(
+            string path,
+            ReturnContainers returnContainers)
+        {
+            Console.WriteLine("GetChildNames");
+            GetPathItems(path, false, uint.MaxValue, true, returnContainers);
+        } // GetChildNames
+
         #endregion GetChildNames
+
+        protected override bool ConvertPath(
+            string path,
+            string filter,
+            ref string updatedPath,
+            ref string updatedFilter)
+        {
+            // In order to support Wildcards?
+            // WriteWarning($"ConvertPath ({path}, {filter})");
+
+            // Don't handle full paths, paths that the user is already trying to
+            // filter, or paths they are trying to escape.
+            if ((!string.IsNullOrEmpty(filter)) ||
+                (path.Contains(Path.DirectorySeparatorChar, StringComparison.Ordinal)) ||
+                (path.Contains(Path.AltDirectorySeparatorChar, StringComparison.Ordinal)) ||
+                (path.Contains("`"))
+                )
+            {
+                return false;
+            }
+
+            // We can never actually modify the PowerShell path, as the
+            // Win32 filtering support returns items that match the short
+            // filename OR long filename.
+            //
+            // This creates tons of seemingly incorrect matches, such as:
+            //
+            // *~*:   Matches any file with a long filename
+            // *n*:   Matches all files with a long filename, but have been
+            //        mapped to a [6][~n].[3] disambiguation bucket
+            // *.abc: Matches all files that have an extension that begins
+            //        with ABC, since their extension is truncated in the
+            //        short filename
+            // *.*:   Matches all files and directories, even if they don't
+            //        have a dot in their name
+
+            // Our algorithm here is pretty simple. The filesystem can handle
+            // * and ? in PowerShell wildcards, just not character ranges [a-z].
+            // We replace character ranges with the single-character wildcard, '?'.
+            updatedPath = path;
+            updatedFilter = System.Text.RegularExpressions.Regex.Replace(path, "\\[.*?\\]", "?");
+            WriteWarning($"ConvertPath ({updatedPath}, {updatedFilter})");
+            return true;
+        }
+        private void GetPathItems(
+            string path,
+            bool recurse,
+            uint depth,
+            bool nameOnly,
+            ReturnContainers returnContainers)
+        {
+            // Verify parameters
+            if (String.IsNullOrEmpty(path))
+            {
+                throw PSTraceSource.NewArgumentException("path");
+            }
+
+            bool isDirectory = IsItemContainer(path);
+            bool exists = ItemExists(path);
+
+            path = NormalizePath(path);
+
+            if (exists)
+            {
+                if (isDirectory)
+                {
+                    // Only the Root directory is looked at for this scenario. 
+                    IEnumerable<ZipFileItemInfo> fileInfoItems = ZipFileItemInfo.GetFileItemInfo(PSDriveInfo, "*");
+
+                    // Sort the files
+                    fileInfoItems = fileInfoItems.OrderBy(c => c.FullName, StringComparer.CurrentCultureIgnoreCase);
+
+                    foreach (ZipFileItemInfo fileInfo in fileInfoItems)
+                    {
+                        if (nameOnly)
+                        {
+                            WriteItemObject(
+                                fileInfo.Name,
+                                path,
+                                false);
+                        }
+                        else
+                        {
+                            WriteItemObject(fileInfo, path, false);
+                        }
+                    }
+                    
+                }
+                else
+                {
+                    // Maybe the path is a file name so try a FileInfo instead
+                    ZipFileItemInfo fileInfo = new ZipFileItemInfo(PSDriveInfo, path);
+
+                    if (nameOnly)
+                    {
+                        WriteItemObject(
+                            fileInfo.Name,
+                            fileInfo.FullName,
+                            false);
+                    }
+                    else
+                    {
+                        WriteItemObject(fileInfo, fileInfo.FullName, false);
+                    }
+
+                }
+
+            }
+            else
+            {
+                String error = StringUtil.Format(FileSystemProviderStrings.ItemDoesNotExist, path);
+                Exception e = new IOException(error);
+                WriteError(new ErrorRecord(
+                    e,
+                    "ItemDoesNotExist",
+                    ErrorCategory.ObjectNotFound,
+                    path));
+                return;
+            }
+        }
+
+
+
+
+
 
         #region RenameItem
 
@@ -63,7 +250,6 @@ namespace PS1C
                 throw PSTraceSource.NewArgumentException("newName");
             }
 
-            // Console.WriteLine("Rename-Item destPath=" + newName);
             // newName = NormalizePath(newName);
 
             // Clean up "newname" to fix some common usability problems:
@@ -237,18 +423,20 @@ namespace PS1C
         /// </exception>
         protected override void RemoveItem(string path, bool recurse)
         {
+            Console.WriteLine("Remove-Item Called");
             if (string.IsNullOrEmpty(path))
             {
                 throw PSTraceSource.NewArgumentException("path");
             }
 
             path = NormalizePath(path);
+
             if (!ItemExists(path))
             {
                 Console.WriteLine($"Cannot find path {path}");
                 throw new Exception("Item not exists");
             }
-            ZipFileItemInfo ArchiveItem = GetItemHelper(path);
+            ZipFileItemInfo ArchiveItem = new ZipFileItemInfo(PSDriveInfo, path);
             ArchiveItem.Delete();
 		}
 
@@ -283,12 +471,13 @@ namespace PS1C
         protected override bool ItemExists(string path)
         {
             ErrorRecord error = null;
-            bool result = ItemExists(path, out error);
 
+            bool result = ItemExists(path, out error);
             if (error != null)
             {
                 WriteError(error);
             }
+            Console.WriteLine($"ItemExists: '{path}' {result} {error != null}");
             return result;
         }
 
@@ -340,8 +529,8 @@ namespace PS1C
 
                 // First see if the file exists
                 try {
-
-                    if ((new ZipFileItemInfo(PSDriveInfo, path)) != null)
+                    //if ((new ZipFileItemInfo(PSDriveInfo, path)) != null)
+                    if (ZipFileItemInfo.GetFileItemInfo(PSDriveInfo, path) != null)
                     {
                         result = true;
                     }
@@ -423,7 +612,7 @@ namespace PS1C
         protected override bool HasChildItems(string path)
         {
             bool result = false;
-
+            Console.WriteLine($"HasChildItems {path}");
             // verify parameters
             if (string.IsNullOrEmpty(path))
             {

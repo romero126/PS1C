@@ -7,6 +7,7 @@ using System.Management.Automation.Internal;
 
 namespace Microsoft.PowerShell.Commands
 {
+    #region ZipFileItemInfo
     public class ZipFileItemInfo : System.IO.FileSystemInfo
     {
         //Public Extension info
@@ -162,17 +163,14 @@ namespace Microsoft.PowerShell.Commands
         }
         
         // Simplex search
-        public static List<ZipFileItemInfo> GetFileItemInfo(PSDriveInfo drive, string path)
+        public static ZipFileItemInfo[] GetFileItemInfo(PSDriveInfo drive, string path)
         {
-            if (String.IsNullOrEmpty(path))
+            if (!path.Contains("*"))
             {
-                throw PSTraceSource.NewArgumentNullException("path");
+                path += "*";
             }
-
             List<ZipFileItemInfo> results = new List<ZipFileItemInfo>();
-            WildcardPattern wildcardPattern = WildcardPattern.Get(path + "*", WildcardOptions.IgnoreCase | WildcardOptions.Compiled);
-
-
+            WildcardPattern wildcardPattern = WildcardPattern.Get(path, WildcardOptions.IgnoreCase | WildcardOptions.Compiled);
             using (ZipArchive zipArchive = ZipFile.Open(drive.Root, ZipArchiveMode.Read))
             {
                 foreach (ZipArchiveEntry zipArchiveEntry in zipArchive.Entries)
@@ -186,6 +184,7 @@ namespace Microsoft.PowerShell.Commands
 
             if (results.Count == 0)
             {
+                Console.WriteLine("GetFileItemInfo: Results Null");
                 return null;
             }
 
@@ -194,7 +193,7 @@ namespace Microsoft.PowerShell.Commands
             //{
             //    Console.WriteLine($": {v.FullName}");
             //}
-            return results;
+            return results.ToArray();
         }
         //Methods
         public StreamWriter AppendText()
@@ -350,4 +349,5 @@ namespace Microsoft.PowerShell.Commands
 
 
     }
+    #endregion ZipFileItemInfo
 }
