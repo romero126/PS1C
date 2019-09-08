@@ -276,7 +276,8 @@ namespace PS1C
 		public void ClearContent(string path)
 		{
             StreamContentReaderWriter stream = null;
-            ZipFileItemInfo archiveFile = GetItemHelper(path);
+            path = NormalizePath(path);
+            ZipFileItemInfo archiveFile = new ZipFileItemInfo(PSDriveInfo, path, true);
             archiveFile.ClearContent();
 
 		}
