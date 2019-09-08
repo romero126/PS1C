@@ -184,7 +184,7 @@ namespace Microsoft.PowerShell.Commands
 
             if (results.Count == 0)
             {
-                Console.WriteLine("GetFileItemInfo: Results Null");
+                // Console.WriteLine("GetFileItemInfo: Results Null");
                 return null;
             }
 
