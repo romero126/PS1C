@@ -437,8 +437,13 @@ namespace PS1C
             {
                 throw new Exception("Item not exists");
             }
-            ZipFileItemInfo ArchiveItem = new ZipFileItemInfo(ZipFileDriveInfo, path);
-            ArchiveItem.Delete();
+            
+            ZipFileItemInfo[] archiveItems = ZipFileItemInfo.GetFileItemInfo(ZipFileDriveInfo, path);
+            foreach(ZipFileItemInfo archiveItem in archiveItems)
+            {
+                archiveItem.Delete();
+            }
+            
 		}
 
         // Todo: Double check this whole region
