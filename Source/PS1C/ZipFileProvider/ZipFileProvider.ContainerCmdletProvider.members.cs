@@ -435,7 +435,6 @@ namespace PS1C
 
             if (!ItemExists(path))
             {
-                Console.WriteLine($"Cannot find path {path}");
                 throw new Exception("Item not exists");
             }
             ZipFileItemInfo ArchiveItem = new ZipFileItemInfo(ZipFileDriveInfo, path);
@@ -479,7 +478,7 @@ namespace PS1C
             {
                 WriteError(error);
             }
-            Console.WriteLine($"ItemExists: '{path}' {result} {error != null}");
+
             return result;
         }
 
@@ -613,7 +612,7 @@ namespace PS1C
         protected override bool HasChildItems(string path)
         {
             bool result = false;
-            Console.WriteLine($"HasChildItems {path}");
+            
             // verify parameters
             if (string.IsNullOrEmpty(path))
             {

@@ -123,7 +123,7 @@ namespace PS1C
                 {
                     // Otherwise, return the item itself.
                     foreach (ZipFileItemInfo i in result) {
-                        WriteItemObject(i, i.RootFullName, isContainer);
+                        WriteItemObject(i, i.FullName, isContainer);
                     }
                     //
                     //WriteItemObject(result, path, )
