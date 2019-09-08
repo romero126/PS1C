@@ -63,7 +63,7 @@ namespace PS1C
             // let us check if we _could_ open the file.
             try
             {
-                ZipFileItemInfo testFile = new ZipFileItemInfo(PSDriveInfo, path);
+                ZipFileItemInfo testFile = new ZipFileItemInfo(ZipFileDriveInfo, path);
             }
             catch (Exception e)
             {
@@ -100,6 +100,7 @@ namespace PS1C
         /// </exception>
         protected override void GetItem(string path)
         {
+
             path = NormalizePath(path);
 
             // Validate the argument
@@ -113,15 +114,19 @@ namespace PS1C
 
             try
             {
-
-                //ZipFileItemInfo result = new ZipFileItemInfo(PSDriveInfo, path);
-                ZipFileItemInfo[] result = ZipFileItemInfo.GetFileItemInfo(PSDriveInfo, path);
+                
+                //ZipFileItemInfo result = new ZipFileItemInfo(ZipFileDriveInfo, path);
+                ZipFileItemInfo[] result = ZipFileItemInfo.GetFileItemInfo(ZipFileDriveInfo, path);
 
                 // FileSystemInfo result = GetFileSystemItem(path, ref isContainer, false);
                 if (result != null)
                 {
                     // Otherwise, return the item itself.
-                    WriteItemObject(result, path, isContainer);
+                    foreach (ZipFileItemInfo i in result) {
+                        WriteItemObject(i, i.RootFullName, isContainer);
+                    }
+                    //
+                    //WriteItemObject(result, path, )
                 }
                 else
                 {

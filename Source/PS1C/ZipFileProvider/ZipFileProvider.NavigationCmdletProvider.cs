@@ -7,7 +7,7 @@ using System.IO.Compression;
 
 using System.Management.Automation;
 using System.Management.Automation.Provider;
-
+using System.Linq;
 using PS1C.Archive;
 
 
@@ -25,32 +25,49 @@ namespace PS1C
 		protected override bool IsItemContainer(string path)
 		{
             path = NormalizePath(path);
-            // WriteWarning($"[TODO] IsItemContainer(string path) '{path}'");
 
-            if ( path == "" )
+            if ( String.IsNullOrEmpty(path) )
             {
                 return true;
             }
+
 			return false;
 		}
         internal ZipFileItemInfo GetItemHelper(string path)
 		{
             path = NormalizePath(path);
 
-            return new ZipFileItemInfo(PSDriveInfo, path);
+            return new ZipFileItemInfo(ZipFileDriveInfo, path);
 		}
 
 
         private string NormalizePath(string path)
         {
 
-            if (path.StartsWith(PSDriveInfo.Root))
-            {
-                path = path.Remove(0, PSDriveInfo.Root.Length+1);
+            // If PSDriveInfo is null search for relative indicators for a specific PSDrive.
+            // This addresses an issue with PSDriveInfo returning null when running the following command
+            // Get-Item $file | Remove-Item
+            if (PSDriveInfo == null) {
+                if (path.Contains(Path.VolumeSeparatorChar))
+                {
+
+                    SessionState.Drive.GetAllForProvider(ProviderName).ToList().ForEach( i => {
+                        if ( (path.StartsWith(i.Root)) || (path.StartsWith(i.Name)) )
+                        {
+                            _psDriveInfo = i;
+                        }
+                    });
+
+                }
             }
-            else if (path.StartsWith($"{PSDriveInfo.Name}:") )
+            
+            if (path.StartsWith(ZipFileDriveInfo.Root))
             {
-                path = path.Remove(0, PSDriveInfo.Name.Length+2);
+                path = path.Remove(0, ZipFileDriveInfo.Root.Length+1);
+            }
+            else if (path.StartsWith($"{ZipFileDriveInfo.Name}:") )
+            {
+                path = path.Remove(0, ZipFileDriveInfo.Name.Length+2);
             }
             path = path.Replace(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
 
@@ -58,7 +75,6 @@ namespace PS1C
         }
 
         #endregion
-
         
     }
 }

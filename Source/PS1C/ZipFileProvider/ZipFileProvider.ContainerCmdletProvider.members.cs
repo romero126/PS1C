@@ -149,13 +149,13 @@ namespace PS1C
             {
                 if (String.IsNullOrEmpty(path))
                 {
-                    path = $"{PSDriveInfo.Name}:\\";
+                    path = $"{ZipFileDriveInfo.Name}:\\";
                 }
-                
+
                 if (isDirectory)
                 {
                     // Only the Root directory is looked at for this scenario. 
-                    IEnumerable<ZipFileItemInfo> fileInfoItems = ZipFileItemInfo.GetFileItemInfo(PSDriveInfo, "*");
+                    IEnumerable<ZipFileItemInfo> fileInfoItems = ZipFileItemInfo.GetFileItemInfo(ZipFileDriveInfo, "*");
 
                     // Sort the files
                     fileInfoItems = fileInfoItems.OrderBy(c => c.FullName, StringComparer.CurrentCultureIgnoreCase);
@@ -166,12 +166,12 @@ namespace PS1C
                         {
                             WriteItemObject(
                                 fileInfo.Name,
-                                path,
+                                fileInfo.FullName,
                                 false);
                         }
                         else
                         {
-                            WriteItemObject(fileInfo, path, false);
+                            WriteItemObject(fileInfo, fileInfo.FullName, false);
                         }
                     }
                     
@@ -179,7 +179,7 @@ namespace PS1C
                 else
                 {
                     // Maybe the path is a file name so try a FileInfo instead
-                    ZipFileItemInfo fileInfo = new ZipFileItemInfo(PSDriveInfo, path);
+                    ZipFileItemInfo fileInfo = new ZipFileItemInfo(ZipFileDriveInfo, path);
 
                     if (nameOnly)
                     {
@@ -284,7 +284,7 @@ namespace PS1C
             try
             {           
                 // Manually move this item since you cant have more than one stream open at a time.
-                ZipFileItemInfo file = new ZipFileItemInfo(PSDriveInfo, path);
+                ZipFileItemInfo file = new ZipFileItemInfo(ZipFileDriveInfo, path);
                 ZipFileItemInfo result;
 
                 // Confirm the rename with the user
@@ -298,7 +298,7 @@ namespace PS1C
                 {
                     // Now move the file
                     // Validate Current PWD is not the Provider
-                    //if ((!Path.IsPathFullyQualified(newName)) && (!SessionState.Path.CurrentLocation.Path.StartsWith(PSDriveInfo.Name + ":")) )
+                    //if ((!Path.IsPathFullyQualified(newName)) && (!SessionState.Path.CurrentLocation.Path.StartsWith(ZipFileDriveInfo.Name + ":")) )
                     //{
                     //    newName = Path.Join(SessionState.Path.CurrentLocation.Path, newName);
                     //}
@@ -384,7 +384,7 @@ namespace PS1C
 
             if (type == "file")
             {
-                ZipFileItemInfo newItem = new ZipFileItemInfo(PSDriveInfo, path, true);
+                ZipFileItemInfo newItem = new ZipFileItemInfo(ZipFileDriveInfo, path, true);
                 if (value != null)
                 {
                     using (StreamWriter writer = newItem.AppendText())
@@ -426,7 +426,6 @@ namespace PS1C
         /// </exception>
         protected override void RemoveItem(string path, bool recurse)
         {
-            Console.WriteLine("Remove-Item Called");
             if (string.IsNullOrEmpty(path))
             {
                 throw PSTraceSource.NewArgumentException("path");
@@ -439,7 +438,7 @@ namespace PS1C
                 Console.WriteLine($"Cannot find path {path}");
                 throw new Exception("Item not exists");
             }
-            ZipFileItemInfo ArchiveItem = new ZipFileItemInfo(PSDriveInfo, path);
+            ZipFileItemInfo ArchiveItem = new ZipFileItemInfo(ZipFileDriveInfo, path);
             ArchiveItem.Delete();
 		}
 
@@ -529,11 +528,10 @@ namespace PS1C
                 bool notUsed;
                 // Exception accessException;
 
-
                 // First see if the file exists
                 try {
-                    //if ((new ZipFileItemInfo(PSDriveInfo, path)) != null)
-                    if (ZipFileItemInfo.GetFileItemInfo(PSDriveInfo, path) != null)
+                    //if ((new ZipFileItemInfo(ZipFileDriveInfo, path)) != null)
+                    if (ZipFileItemInfo.GetFileItemInfo(ZipFileDriveInfo, path) != null)
                     {
                         result = true;
                     }

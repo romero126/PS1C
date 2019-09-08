@@ -90,7 +90,7 @@ namespace PS1C
             }
             StreamContentReaderWriter stream = null;
 
-            ZipFileItemInfo archiveFile = new ZipFileItemInfo(PSDriveInfo, path);
+            ZipFileItemInfo archiveFile = new ZipFileItemInfo(ZipFileDriveInfo, path);
             //Archive.FileStream archiveStream = archiveFile.Open(FileMode.Append);
 
             try
@@ -230,7 +230,7 @@ namespace PS1C
 
             StreamContentReaderWriter stream = null;
 
-            ZipFileItemInfo archiveFile = new ZipFileItemInfo(PSDriveInfo, path, true);
+            ZipFileItemInfo archiveFile = new ZipFileItemInfo(ZipFileDriveInfo, path, true);
 
             try
             {

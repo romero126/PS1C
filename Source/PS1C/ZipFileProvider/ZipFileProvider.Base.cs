@@ -1,6 +1,9 @@
 using System;
+
 using System.Management.Automation;
 using System.Management.Automation.Provider;
+using System.IO;
+using System.Linq;
 
 namespace PS1C
 {
@@ -19,18 +22,28 @@ namespace PS1C
         /// </summary>
         public const string ProviderName = "ZipFile";
 
+
+        private PSDriveInfo _psDriveInfo;
+
+
         /// <summary>
         /// Initializes a new instance of the FileSystemProvider class. Since this
         /// object needs to be stateless, the constructor does nothing.
         /// </summary>
 
-        // Workaround for internal class objects
-        internal InvocationInfo Context_MyInvocation {
-            get {
-                return (InvocationInfo)SessionState.PSVariable.Get("MyInvocation").Value;
-            }
 
+        internal PSDriveInfo ZipFileDriveInfo {
+            get {
+                if (_psDriveInfo != null)
+                {
+                    return _psDriveInfo;
+                }
+                return PSDriveInfo;
+            }
         }
+
+
+
 
     }
 
