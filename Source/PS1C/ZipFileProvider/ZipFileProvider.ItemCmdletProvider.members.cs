@@ -2,6 +2,7 @@
 using Microsoft.PowerShell.Commands;
 using System;
 using System.IO;
+using System.Globalization;
 using System.Management.Automation;
 using System.Management.Automation.Internal;
 using System.Management.Automation.Provider;
@@ -179,13 +180,34 @@ namespace PS1C
             {
                 var invokeProcess = new System.Diagnostics.Process();
                 invokeProcess.StartInfo.FileName = path;
-#if UNIX
-                // bool invokeDefaultProgram = false;
-                // if (Directory.Exists(path))
-                // {
-                //     // Path points to a directory. We have to use xdg-open/open on Linux/macOS.
-                //     invokeDefaultProgram = true;
-                // }
+
+                bool invokeDefaultProgram = false;
+
+
+                if (IsItemContainer(path))
+                {
+
+                    // Path points to a directory. We have to use xdg-open/open on Linux/macOS.
+                    invokeDefaultProgram = true;
+                    path = ZipFileDriveInfo.Root;
+                }
+                else if (Path.GetExtension(path) == ".ps1") {
+                    
+                    ZipFileItemInfo[] zipFileItemInfoList = ZipFileItemInfo.GetFileItemInfo(ZipFileDriveInfo, path);
+                    Object[] scriptargs = null;
+                    foreach (ZipFileItemInfo zipFileItemInfo in zipFileItemInfoList)
+                    {
+                        string script = zipFileItemInfo.ReadToEnd();
+                        //var result = SessionState.InvokeCommand.InvokeScript(script, false, System.Management.Automation.Runspaces.PipelineResultTypes.All, null, scriptargs);
+                        ScriptBlock scriptBlock = ScriptBlock.Create(script);
+                        var result = SessionState.InvokeCommand.InvokeScript(SessionState, scriptBlock, scriptargs);
+                        //var result = SessionState.InvokeCommand.InvokeScript(script, scriptargs);
+                        WriteItemObject(result, zipFileItemInfo.FullName, false);
+                    }
+                    //SessionState.InvokeCommand.InvokeScript(script, scriptargs);
+                }
+
+
                 // else
                 // {
                 //     try
@@ -201,23 +223,37 @@ namespace PS1C
                 //     }
                 // }
 
-                // if (invokeDefaultProgram)
-                // {
-                //     const string quoteFormat = "\"{0}\"";
-                //     invokeProcess.StartInfo.FileName = Platform.IsLinux ? "xdg-open" : /* macOS */ "open";
-                //     if (NativeCommandParameterBinder.NeedQuotes(path))
-                //     {
-                //         path = string.Format(CultureInfo.InvariantCulture, quoteFormat, path);
-                //     }
-                //     invokeProcess.StartInfo.Arguments = path;
-                //     invokeProcess.Start();
-                // }
-#else
-                // Use ShellExecute when it's not a headless SKU
-                // invokeProcess.StartInfo.UseShellExecute = Platform.IsWindowsDesktop;
-                // invokeProcess.Start();
-#endif
-                throw new Exception("The following Invoke Subsystem is not Implimented");
+                if (invokeDefaultProgram)
+                {
+                    const string quoteFormat = "\"{0}\"";
+                                       
+                    if (Platform.IsLinux) {
+                        invokeProcess.StartInfo.FileName = "xdg-open";
+                        invokeProcess.StartInfo.Arguments = path;
+                    }
+                    if (Platform.IsMacOS) {
+                        invokeProcess.StartInfo.FileName = "open";
+                        invokeProcess.StartInfo.Arguments = path;
+                    }
+                    if (Platform.IsWindows)
+                    {
+                        // Use ShellExecute when it's not a headless SKU
+                        // 
+                        invokeProcess.StartInfo.UseShellExecute = Platform.IsWindowsDesktop;
+                        invokeProcess.StartInfo.FileName = path;
+                    }
+                    //if (NativeCommandParameterBinder.NeedQuotes(path))
+                    {
+                        // Assume true
+                        path = string.Format(CultureInfo.InvariantCulture, quoteFormat, path);
+                    }
+                    invokeProcess.Start();
+                }
+
+
+
+
+
             }
         } // InvokeDefaultAction
         
