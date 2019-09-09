@@ -30,6 +30,10 @@ namespace PS1C
             {
                 return true;
             }
+            if ( path == "\\" || path == "/")
+            {
+                return true;
+            }
 
 			return false;
 		}
