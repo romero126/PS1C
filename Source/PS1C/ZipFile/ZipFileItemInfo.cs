@@ -326,7 +326,8 @@ namespace Microsoft.PowerShell.Commands
 
         public StreamReader OpenText()
         {
-            throw new Exception("Not Implemented Exception");
+            return new StreamReader(Open(FileMode.Open));
+            //throw new Exception("Not Implemented Exception");
         }
         public ZipFileItemStream OpenWrite()
         {
@@ -336,7 +337,17 @@ namespace Microsoft.PowerShell.Commands
         //Refresh                   Method         void Refresh()
         //Replace                   Method         System.IO.FileInfo Replace(string destinationFileName, string destinationBa...
         //SetAccessControl          Method         void SetAccessControl(System.Security.AccessControl.FileSecurity fileSecurity)
-    
+
+        public string ReadToEnd()
+        {
+            string result;
+            using (ZipFileItemStream stream = Open(FileMode.Append))
+            using (StreamReader streamReader = new StreamReader(stream))
+            {
+                result = streamReader.ReadToEnd();
+            }
+            return result;
+        }
         internal void ClearContent()
         {
             ZipFileItemStream fileStream = Open(FileMode.Append);
