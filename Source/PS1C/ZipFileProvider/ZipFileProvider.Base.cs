@@ -11,7 +11,7 @@ using System.Management.Automation.Provider;
 
 namespace PS1C
 {
-
+    #region ZipFileProvider
     //[CmdletProvider(ZipFileProvider.ProviderName, ProviderCapabilities.Credentials | ProviderCapabilities.Filter | ProviderCapabilities.ShouldProcess)]
     [CmdletProvider(ZipFileProvider.ProviderName, ProviderCapabilities.ShouldProcess | ProviderCapabilities.ExpandWildcards )]
 
@@ -65,10 +65,17 @@ namespace PS1C
         /// </returns>
         private string NormalizePath(string path)
         {
-
-            // If PSDriveInfo is null search for relative indicators for a specific PSDrive.
-            // This addresses an issue with PSDriveInfo returning null when running the following command
-            // Get-Item $file | Remove-Item
+            // [Bug] PSDriveInfo sometimes does not get instantiated with the provider
+            // this causes stateful issues with complex providers.
+            // Example Duplication of this issue
+            //
+            // ./<tabkey>
+            // and 
+            // Get-Item $FileName | Remove-Item
+            //
+            // Current Workaround searches all Drives with ProviderName
+            // and checks relative path and overrides the path lookup.
+            
             if (PSDriveInfo == null) {
                 if (path.Contains(Path.VolumeSeparatorChar))
                 {
@@ -76,7 +83,7 @@ namespace PS1C
                     SessionState.Drive.GetAllForProvider(ProviderName).ToList().ForEach( i => {
                         if ( (path.StartsWith(i.Root)) || (path.StartsWith(i.Name)) )
                         {
-                            _psDriveInfo = i;
+                            ZipFileDriveInfo = i;
                         }
                     });
 
@@ -506,7 +513,6 @@ namespace PS1C
         } // GetChildNames
 
         #endregion GetChildNames
-
         protected override bool ConvertPath(
             string path,
             string filter,
@@ -1157,6 +1163,17 @@ namespace PS1C
         
         #endregion ContainerCmdletProvider members
 
+        #region NavigationCmdletProvider
+
+        #endregion NavigationCmdletProvider
+
+        #region IContentCmdletProvider
+
+        #endregion IContentCmdletProvider
     }
+    #endregion ZipFileProvider
+    #region Dynamic Parameters
+
+    #endregion Dynamic Parameters
 
 }
