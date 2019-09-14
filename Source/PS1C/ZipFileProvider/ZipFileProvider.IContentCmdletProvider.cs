@@ -230,6 +230,12 @@ namespace PS1C
 
             StreamContentReaderWriter stream = null;
 
+            // Validate Parent Directory does not exist
+            if (!IsItemContainer(Path.GetDirectoryName(path)))
+            {
+                throw new Exception("Parent directory does not exist");
+            }
+
             ZipFileItemInfo archiveFile = new ZipFileItemInfo(ZipFileDriveInfo, path, true);
 
             try

@@ -65,6 +65,7 @@ namespace PS1C
         /// </returns>
         private string NormalizePath(string path)
         {
+
             // [Bug] PSDriveInfo sometimes does not get instantiated with the provider
             // this causes stateful issues with complex providers.
             // Example Duplication of this issue
@@ -77,9 +78,9 @@ namespace PS1C
             // and checks relative path and overrides the path lookup.
             
             if (PSDriveInfo == null) {
+
                 if (path.Contains(Path.VolumeSeparatorChar))
                 {
-
                     SessionState.Drive.GetAllForProvider(ProviderName).ToList().ForEach( i => {
                         if ( (path.StartsWith(i.Root)) || (path.StartsWith(i.Name)) )
                         {
@@ -90,6 +91,11 @@ namespace PS1C
                 }
             }
             
+            if (path.IndexOfAny(Path.GetInvalidPathChars()) != -1)
+            {
+                throw new InvalidDataException("Path contains invalid characters");
+            }
+
             if (path.StartsWith(ZipFileDriveInfo.Root))
             {
                 path = path.Remove(0, ZipFileDriveInfo.Root.Length+1);
@@ -100,6 +106,7 @@ namespace PS1C
             }
             path = path.Replace(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
 
+            // Before returning a normalized path
             return path;
         }
 
@@ -118,8 +125,8 @@ namespace PS1C
         protected override string[] ExpandPath(string path)
         {
             path = NormalizePath(path);
-            ZipFileItemInfo[] zipFileItemInfo = ZipFileItemInfo.GetFileItemInfo(ZipFileDriveInfo, path);
-            return zipFileItemInfo.Select(i => i.FullName).ToArray();
+            IEnumerable<ZipFileItemInfo> zipFileItemInfoList = ZipFileItemInfo.GetZipFileItemInfo(ZipFileDriveInfo, path, true, true);
+            return zipFileItemInfoList.Select(i => i.FullName).ToArray();
         }
 
         /// <summary>
@@ -139,11 +146,11 @@ namespace PS1C
         /// An object that has properties and fields decorated with
         /// parsing attributes similar to a cmdlet class.
         /// </returns>
-        protected override object GetChildNamesDynamicParameters(string path)
-        {
-            return null;
-            // return new GetChildDynamicParameters();
-        }
+        // protected override object GetChildNamesDynamicParameters(string path)
+        // {
+        //     return null;
+        //     // return new GetChildDynamicParameters();
+        // }
 
         /// <summary>
         /// Gets the dynamic parameters for get-childitems on the
@@ -166,11 +173,11 @@ namespace PS1C
         /// An object that has properties and fields decorated with
         /// parsing attributes similar to a cmdlet class.
         /// </returns>
-        protected override object GetChildItemsDynamicParameters(string path, bool recurse)
-        {
-            return null;
-            // return new GetChildDynamicParameters();
-        }
+        //protected override object GetChildItemsDynamicParameters(string path, bool recurse)
+        //{
+        //    return null;
+        //    // return new GetChildDynamicParameters();
+        //}
 
         /// <summary>
         /// Gets the dynamic parameters for Copy-Item on the FileSystemProvider.
@@ -222,7 +229,9 @@ namespace PS1C
 			{
 				throw new Exception("file not found");
 			}
-			
+            // Build folder paths on initialize
+            ZipFileItemInfo.buildFolderPaths(drive);
+
             return base.NewDrive(drive);
 		}
 
@@ -254,7 +263,7 @@ namespace PS1C
         protected override bool IsValidPath(string path)
 		{
             // Path passed should be fully qualified path.
-            Console.WriteLine($"IsValidPath('{path}')");
+
             if (string.IsNullOrEmpty(path))
             {
                 return false;
@@ -328,7 +337,7 @@ namespace PS1C
             {
                 
                 //ZipFileItemInfo result = new ZipFileItemInfo(ZipFileDriveInfo, path);
-                ZipFileItemInfo[] result = ZipFileItemInfo.GetFileItemInfo(ZipFileDriveInfo, path);
+                IEnumerable<ZipFileItemInfo> result = ZipFileItemInfo.GetZipFileItemInfo(ZipFileDriveInfo, path, true, true);
 
                 // FileSystemInfo result = GetFileSystemItem(path, ref isContainer, false);
                 if (result != null)
@@ -404,7 +413,7 @@ namespace PS1C
                 }
                 else if (Path.GetExtension(path) == ".ps1") {
                     
-                    ZipFileItemInfo[] zipFileItemInfoList = ZipFileItemInfo.GetFileItemInfo(ZipFileDriveInfo, path);
+                    IEnumerable<ZipFileItemInfo> zipFileItemInfoList = ZipFileItemInfo.GetZipFileItemInfo(ZipFileDriveInfo, path, false, true);
                     Object[] scriptargs = null;
                     foreach (ZipFileItemInfo zipFileItemInfo in zipFileItemInfoList)
                     {
@@ -520,7 +529,7 @@ namespace PS1C
             ref string updatedFilter)
         {
             // In order to support Wildcards?
-            // WriteWarning($"ConvertPath ({path}, {filter})");
+            WriteWarning($"ConvertPath ({path}, {filter})");
 
             // Don't handle full paths, paths that the user is already trying to
             // filter, or paths they are trying to escape.
@@ -563,6 +572,7 @@ namespace PS1C
             bool nameOnly,
             ReturnContainers returnContainers)
         {
+
             // Verify parameters
             if (String.IsNullOrEmpty(path))
             {
@@ -573,19 +583,29 @@ namespace PS1C
             bool exists = ItemExists(path);
             
             path = NormalizePath(path);
+            if (IsItemContainer(path))
+            {
+                path += Path.AltDirectorySeparatorChar;
+            }
 
             if (exists)
             {
-                if (String.IsNullOrEmpty(path))
-                {
-                    path = $"{ZipFileDriveInfo.Name}:\\";
-                }
-
+                //path = String.IsNullOrEmpty(path) || !path.StartsWith(ZipFileDriveInfo.Name) ? $"{ZipFileDriveInfo.Name}:\\{path}" : path;
+                
                 if (isDirectory)
                 {
-                    // Only the Root directory is looked at for this scenario. 
-                    IEnumerable<ZipFileItemInfo> fileInfoItems = ZipFileItemInfo.GetFileItemInfo(ZipFileDriveInfo, "*");
+                    if (!path.Contains("*"))
+                    {
+                        path += "*";
+                    }
 
+                    // Only the Root directory is looked at for this scenario. 
+                    IEnumerable<ZipFileItemInfo> fileInfoItems = ZipFileItemInfo.GetZipFileItemInfo(ZipFileDriveInfo, path, true, true);
+
+                    if (fileInfoItems == null)
+                    {
+                        return;
+                    }
                     // Sort the files
                     fileInfoItems = fileInfoItems.OrderBy(c => c.FullName, StringComparer.CurrentCultureIgnoreCase);
 
@@ -596,11 +616,11 @@ namespace PS1C
                             WriteItemObject(
                                 fileInfo.Name,
                                 fileInfo.FullName,
-                                false);
+                                fileInfo.IsContainer);
                         }
                         else
                         {
-                            WriteItemObject(fileInfo, fileInfo.FullName, false);
+                            WriteItemObject(fileInfo, fileInfo.FullName, fileInfo.IsContainer);
                         }
                     }
                     
@@ -627,6 +647,8 @@ namespace PS1C
             }
             else
             {
+                Console.WriteLine("Please help me out. Submit an issue with what you did in order to get this to trigger");
+                Console.WriteLine("https://github.com/romero126/PS1C");
                 String error = StringUtil.Format(FileSystemProviderStrings.ItemDoesNotExist, path);
                 Exception e = new IOException(error);
                 WriteError(new ErrorRecord(
@@ -793,6 +815,7 @@ namespace PS1C
 
             path = NormalizePath(path);
 
+
             // if (Force)
             // {
             //     if (!CreateIntermediateDirectories(path))
@@ -800,6 +823,14 @@ namespace PS1C
             //         return;
             //     }
             // }
+
+
+            // Validate Parent Directory does not exist
+            if (!IsItemContainer(Path.GetDirectoryName(path)))
+            {
+                throw new Exception("Parent directory does not exist");
+            }
+
             if (ItemExists(path))
             {
                 throw new Exception("File Exists");
@@ -861,12 +892,12 @@ namespace PS1C
                 throw new Exception("Item not exists");
             }
             
-            ZipFileItemInfo[] archiveItems = ZipFileItemInfo.GetFileItemInfo(ZipFileDriveInfo, path);
-            foreach(ZipFileItemInfo archiveItem in archiveItems)
+            IEnumerable<ZipFileItemInfo> archiveItems = ZipFileItemInfo.GetZipFileItemInfo(ZipFileDriveInfo, path, true, true);
+            // Item ToArray skips a 
+            foreach(ZipFileItemInfo archiveItem in archiveItems.ToArray())
             {
                 archiveItem.Delete();
             }
-
 		}
 
         // Todo: Double check this whole region
@@ -957,8 +988,7 @@ namespace PS1C
 
                 // First see if the file exists
                 try {
-                    //if ((new ZipFileItemInfo(ZipFileDriveInfo, path)) != null)
-                    if (ZipFileItemInfo.GetFileItemInfo(ZipFileDriveInfo, path) != null)
+                    if (ZipFileItemInfo.ItemExists(ZipFileDriveInfo, path, true))
                     {
                         result = true;
                     }
@@ -1101,12 +1131,32 @@ namespace PS1C
             path = NormalizePath(path);
             destinationPath = NormalizePath(destinationPath);
 
-            Console.WriteLine("Todo: CopyItem");
+            // Clean up "newname" to fix some common usability problems:
+            // Rename .\foo.txt .\bar.txt
+            // Rename c:\temp\foo.txt c:\temp\bar.txt
+            if (destinationPath.StartsWith(".\\", StringComparison.OrdinalIgnoreCase) ||
+                destinationPath.StartsWith("./", StringComparison.OrdinalIgnoreCase))
+            {
+                destinationPath = destinationPath.Remove(0, 2);
+            }
 
-            //PSSession fromSession = null;
-            //PSSession toSession = null;
+            bool pathIsDirectory = false;
+            bool destIsDirectory = false;
 
-            // CopyItemDynamicParameters copyDynamicParameter = DynamicParameters as CopyItemDynamicParameters;
+            if (ZipFileItemInfo.ItemExists(ZipFileDriveInfo, path, true))
+            {
+                pathIsDirectory = true;
+            }
+
+            if (Path.EndsInDirectorySeparator(destinationPath))
+            {
+                destIsDirectory = true;
+            }
+
+            // Check if wildcard exists and destination is not a directory.
+            // This should throw
+
+            //CopyItemDynamicParameters copyDynamicParameter = DynamicParameters as CopyItemDynamicParameters;
 
             //if (copyDynamicParameter != null)
             //{
@@ -1120,44 +1170,55 @@ namespace PS1C
             //    }
             //}
 
-            //_excludeMatcher = SessionStateUtilities.CreateWildcardsFromStrings(Exclude, WildcardOptions.IgnoreCase);
+            // Wildcard Items dont exist.
+            try 
+            {
 
-            // if the source and destination path are same (for a local copy) then flag it as error.
-            //if ((toSession == null) && (fromSession == null) && InternalSymbolicLinkLinkCodeMethods.IsSameFileSystemItem(path, destinationPath))
-            //{
-            //    String error = StringUtil.Format(FileSystemProviderStrings.CopyError, path);
-            //    Exception e = new IOException(error);
-            //    e.Data[SelfCopyDataKey] = destinationPath;
-            //    WriteError(new ErrorRecord(e, "CopyError", ErrorCategory.WriteError, path));
-            //    return;
-            //}
-            // Copy-Item from session
-            //if (fromSession != null)
-            //{
-            //    CopyItemFromRemoteSession(path, destinationPath, recurse, Force, fromSession);
-            //}
+                IEnumerable<ZipFileItemInfo> files;
+                if (pathIsDirectory)
+                {
+                    files = ZipFileItemInfo.GetZipFileItemInfo(ZipFileDriveInfo, path+"/*", true, true);
+                }
+                else
+                {
+                    files = ZipFileItemInfo.GetZipFileItemInfo(ZipFileDriveInfo, path, true, true);
+                }
 
-            //else
-            //{
-            //    // Copy-Item to session
-            //    if (toSession != null)
-            //    {
-            //        using (System.Management.Automation.PowerShell ps = System.Management.Automation.PowerShell.Create())
-            //        {
-            //            ps.Runspace = toSession.Runspace;
-            //            CopyItemLocalOrToSession(path, destinationPath, recurse, Force, ps);
-            //        }
-            //    }
+                // Confirm the move with the user
+                string action = FileSystemProviderStrings.CopyItemActionFile;
+                foreach (ZipFileItemInfo file in files)
+                {
+                    string driveName = (file.Drive.Name + Path.VolumeSeparatorChar + Path.DirectorySeparatorChar);
 
-                // Copy-Item local
-            //    else
-            //    {
-            //        CopyItemLocalOrToSession(path, destinationPath, recurse, Force, null);
-            //    }
-            //}
+                    string resource = StringUtil.Format(FileSystemProviderStrings.CopyItemResourceFileTemplate, file.FullName, destinationPath);
+                    if (ShouldProcess(resource, action))
+                    {
+                        // If pathIsDirectory
+                        string destPath = destinationPath;
 
-            //_excludeMatcher.Clear();
-            //_excludeMatcher = null;
+                        if (pathIsDirectory)
+                        {
+                            string relPath = Path.GetRelativePath($"{driveName}{path}",  file.FullName);
+                            destPath = Path.Join(destinationPath, relPath);
+                        }
+                        else if (destIsDirectory) {
+                            destPath = Path.Join(destinationPath, file.Name);
+                        }
+
+                        file.CopyTo(destPath);
+                    }
+
+                }
+
+
+
+            }
+            catch(Exception e) {
+                throw e;
+            }
+
+
+
         }
         #endregion CopyItem
         
@@ -1173,6 +1234,8 @@ namespace PS1C
     }
     #endregion ZipFileProvider
     #region Dynamic Parameters
+
+    
 
     #endregion Dynamic Parameters
 

@@ -25,17 +25,32 @@ namespace PS1C
 		protected override bool IsItemContainer(string path)
 		{
             path = NormalizePath(path);
-
+            bool result = false;
+            
             if ( String.IsNullOrEmpty(path) )
             {
-                return true;
+                result = true;
             }
-            if ( path == "\\" || path == "/")
+            else if ( path == "\\" || path == "/")
             {
-                return true;
+                result = true;
             }
 
-			return false;
+
+            // We need to fix this..
+
+            if (!Path.EndsInDirectorySeparator(path))
+            {
+                path += Path.AltDirectorySeparatorChar;
+            }
+
+            bool itemExists = ItemExists(path);
+            if (itemExists)
+            {
+                result = true;
+            }
+
+			return result;
 		}
         internal ZipFileItemInfo GetItemHelper(string path)
 		{

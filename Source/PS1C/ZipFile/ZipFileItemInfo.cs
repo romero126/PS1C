@@ -1,7 +1,9 @@
 using System;
+using System.Diagnostics;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Management.Automation;
 using System.Management.Automation.Internal;
 
@@ -23,6 +25,11 @@ namespace Microsoft.PowerShell.Commands
         public string DirectoryName
         {
             get {
+                if (IsContainer)
+                {
+                    return Path.GetDirectoryName(Path.TrimEndingDirectorySeparator(FullName));
+                }
+
                 return Path.GetDirectoryName(FullName);
             }
         }
@@ -53,6 +60,12 @@ namespace Microsoft.PowerShell.Commands
                 return String.Format("{0}:\\{1}", Drive.Name, archiveEntry.FullName).Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
             }
         }
+
+        public string FullArchiveName {
+            get {
+                return archiveEntry.FullName.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+            }
+        }
         public bool IsReadOnly
         {
             get {
@@ -62,6 +75,7 @@ namespace Microsoft.PowerShell.Commands
 
             }
         }
+
         //public DateTime        LastAccessTime;                 // {get;set;}
         //public DateTime        LastAccessTimeUtc;              // {get;set;}
         public DateTime LastWriteTime
@@ -95,6 +109,10 @@ namespace Microsoft.PowerShell.Commands
         }
         public override string Name {
             get {
+                if (IsContainer)
+                {
+                    return Path.GetFileName(Path.TrimEndingDirectorySeparator(archiveEntry.FullName));
+                }
                 return archiveEntry.Name;
             }
         }
@@ -105,6 +123,13 @@ namespace Microsoft.PowerShell.Commands
                 return archiveEntry.Archive;
             }
         }
+
+        public bool IsContainer {
+            get {
+                return Path.EndsInDirectorySeparator(archiveEntry.FullName);
+            }
+        }
+
         public ZipFileItemInfo(ZipArchiveEntry item, PSDriveInfo drive)
         {
             Drive = drive;
@@ -162,19 +187,64 @@ namespace Microsoft.PowerShell.Commands
             }
         }
         
-        // Simplex search
-        public static ZipFileItemInfo[] GetFileItemInfo(PSDriveInfo drive, string path)
+        // Search 
+        public static IEnumerable<ZipFileItemInfo> GetZipFileItemInfo(PSDriveInfo drive, string path, bool directory, bool file)
         {
-            if (!path.Contains("*"))
-            {
-                path += "*";
-            }
-            List<ZipFileItemInfo> results = new List<ZipFileItemInfo>();
+            path = path.TrimStart(Path.AltDirectorySeparatorChar).TrimStart(Path.DirectorySeparatorChar);
+
             WildcardPattern wildcardPattern = WildcardPattern.Get(path, WildcardOptions.IgnoreCase | WildcardOptions.Compiled);
             using (ZipArchive zipArchive = ZipFile.Open(drive.Root, ZipArchiveMode.Read))
             {
                 foreach (ZipArchiveEntry zipArchiveEntry in zipArchive.Entries)
                 {
+
+                    if ( Path.GetDirectoryName(path) != Path.GetDirectoryName( Path.TrimEndingDirectorySeparator(zipArchiveEntry.FullName) ) )
+                    {
+                        continue;
+                    }
+
+                    if (wildcardPattern.IsMatch(Path.TrimEndingDirectorySeparator( zipArchiveEntry.FullName )))
+                    {
+                        bool isDirectory = Path.EndsInDirectorySeparator(zipArchiveEntry.FullName);
+
+                        if ((directory && isDirectory) || (file && !isDirectory))
+                        {
+                            yield return new ZipFileItemInfo(zipArchiveEntry, drive);
+                        }
+
+                    }
+                }
+            }
+        }
+        public static IEnumerable<ZipFileItemInfo> GetZipFileItemInfo(PSDriveInfo drive)
+        {
+            using (ZipArchive zipArchive = ZipFile.Open(drive.Root, ZipArchiveMode.Read))
+            {
+                foreach (ZipArchiveEntry zipArchiveEntry in zipArchive.Entries)
+                {
+                    yield return new ZipFileItemInfo(zipArchiveEntry, drive);
+                }
+            }
+        }
+
+        // Simplex search
+        public static ZipFileItemInfo[] GetFileItemInfo2(PSDriveInfo drive, string path)
+        {
+            List<ZipFileItemInfo> results = new List<ZipFileItemInfo>();
+            
+            WildcardPattern wildcardPattern = WildcardPattern.Get(path, WildcardOptions.IgnoreCase | WildcardOptions.Compiled);
+            
+            using (ZipArchive zipArchive = ZipFile.Open(drive.Root, ZipArchiveMode.Read))
+            {
+                foreach (ZipArchiveEntry zipArchiveEntry in zipArchive.Entries)
+                {
+
+                    // Skip if Entry is a directory and not in the same path as Path.
+                    if ( Path.GetDirectoryName(path) != Path.GetDirectoryName( Path.TrimEndingDirectorySeparator(zipArchiveEntry.FullName) ) )
+                    {
+                        continue;
+                    }
+
                     if (wildcardPattern.IsMatch(zipArchiveEntry.FullName))
                     {
                         results.Add(new ZipFileItemInfo(zipArchiveEntry, drive) );
@@ -184,38 +254,53 @@ namespace Microsoft.PowerShell.Commands
 
             if (results.Count == 0)
             {
-                // Console.WriteLine("GetFileItemInfo: Results Null");
                 return null;
             }
 
-            //Console.WriteLine("Results Are as follows");
-            //foreach (var v in results)
-            //{
-            //    Console.WriteLine($": {v.FullName}");
-            //}
             return results.ToArray();
         }
-        //Methods
+        public static bool ItemExists(PSDriveInfo drive, string path, bool directory)
+        {
+            path = path.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+            IEnumerable<ZipFileItemInfo> items = GetZipFileItemInfo(drive);
+
+            foreach (ZipFileItemInfo i in items)
+            {
+                if (path == i.FullArchiveName)
+                {
+                    return true;
+                }
+                if (directory && (path == Path.TrimEndingDirectorySeparator(i.FullArchiveName)))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
         public StreamWriter AppendText()
         {
             return new StreamWriter( OpenWrite() );
         }
 
-        //CopyTo                    Method         System.IO.FileInfo CopyTo(string destFileName), System.IO.FileInfo CopyTo(s...
+        public void CopyTo(string destFileName)
+        {
+            CopyTo(destFileName, false, false);
+        }
         
+        public void CopyTo(string destFileName, bool overwrite)
+        {
+            CopyTo(destFileName, false,  overwrite);
+        }
         //Create                    Method         System.IO.FileStream Create()
         
-        //CreateObjRef              Method         System.Runtime.Remoting.ObjRef CreateObjRef(type requestedType)
-        
-        //CreateText                Method         System.IO.StreamWriter CreateText()
+        //CreateObjRef              Method         System.Runtime.Remoting.ObjRef CreateObjRef(type requestedType)        
         public StreamWriter CreateText()
         {
             return new StreamWriter( OpenWrite() );
         }
         
-        //Decrypt                   Method         void Decrypt()
+
         
-        //Delete                    Method         void Delete()
         public override void Delete()
         {
 
@@ -227,10 +312,16 @@ namespace Microsoft.PowerShell.Commands
 
         }
 
+        public void Decrypt()
+        {
+            throw new NotImplementedException();
+        }
         
-        //Encrypt                   Method         void Encrypt()
-        
-        //Equals                    Method         bool Equals(System.Object obj)
+        public void Encrypt()
+        {
+            throw new NotImplementedException();
+        }
+
         
         //GetAccessControl          Method         System.Security.AccessControl.FileSecurity GetAccessControl(), System.Secur...
         
@@ -244,39 +335,72 @@ namespace Microsoft.PowerShell.Commands
         
         //InitializeLifetimeService Method         System.Object InitializeLifetimeService()
         
-        //MoveTo                    Method         void MoveTo(string destFileName)
 
         public void MoveTo(string destFileName)
-        {            
-            if (Path.IsPathRooted(destFileName))
-            {
-                try
-                {
-                    new DriveInfo(Path.GetPathRoot(destFileName));
-                    CopyToFileSystem(destFileName, true);
-                    return;
-                }
-                catch
-                {
-                    if (destFileName.StartsWith(Drive.Name))
-                    {
-                        destFileName = Path.GetRelativePath( Path.GetPathRoot(destFileName), destFileName );
-                    }
-                    else
-                    {
-                        throw new Exception("unsupported destination path");
-                    }
-                }
-            }
-            CopyToArchive(destFileName, true);
+        {
+            CopyTo(destFileName, true, false);
         }
 
-        private void CopyToFileSystem(string destFileName, bool removeItem)
+
+        internal void CopyTo(string destFileName, bool removeItem, bool overwrite)
         {
+            // if (destFileName.Contains(Path.GetInvalidPathChars()) || destFileName.Contains(Path.GetInvalidFileNameChars())
+            if (destFileName.IndexOfAny(Path.GetInvalidPathChars()) != -1)
+            {
+                throw new InvalidDataException("Path contains invalid characters");
+            }
+
+            // Convert Path to its proper dest path
+            destFileName = destFileName.Replace(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            
+            // If the destination file is a folder
+            // We should move/copy the item to that folder.
+            // Example:
+            // Move-Item Provider:\a\b\c\file.txt .\d\e\f
+            // Will move the file to Provider:\d\e\f\file.txt
+            if (destFileName.EndsWith(Path.AltDirectorySeparatorChar))
+            {
+                destFileName = $"{destFileName}{archiveEntry.Name}";
+            }
+
+            // Validate if path is filesystem
+            if (Path.IsPathRooted(destFileName) && !destFileName.StartsWith(Drive.Name))
+            {
+                CopyToFileSystem(destFileName, removeItem, overwrite);
+                return;
+            }
+
+            // Cleanup the filesystem path
+            if (destFileName.StartsWith(Drive.Name))
+            {
+                destFileName = Path.GetRelativePath(Drive.Name, destFileName);
+            }
+            else if (destFileName.StartsWith(Drive.Root))
+            {
+                destFileName = Path.GetRelativePath(Drive.Root, destFileName);
+            }
+
+            // Throw if still contains Invalid Characters
+            if (destFileName.Contains(Path.VolumeSeparatorChar))
+            {
+                throw new InvalidDataException($"Path must not contain {Path.VolumeSeparatorChar}");
+            }
+
+            CopyToArchive(destFileName, removeItem, overwrite);
+        }
+        
+        internal void CopyToFileSystem(string destFileName, bool removeItem, bool overwrite)
+        {
+            if (File.Exists(destFileName) && !overwrite) 
+            {
+                throw new Exception($"The item exists '{destFileName}'");
+            }
+
             using (ZipArchive zipArchive = ZipFile.Open(Drive.Root, ZipArchiveMode.Update))
             {   
                 ZipArchiveEntry thisEntry = zipArchive.GetEntry(archiveEntry.FullName);
-                
+
+                // Todo Check if file already exists.
                 thisEntry.ExtractToFile(destFileName);
 
                 if (removeItem)
@@ -285,12 +409,19 @@ namespace Microsoft.PowerShell.Commands
                 }
             }
         }
-        private void CopyToArchive(string destFileName, bool removeItem)
+        internal void CopyToArchive(string destFileName, bool removeItem, bool overwrite)
         {
             using (ZipArchive zipArchive = ZipFile.Open(Drive.Root, ZipArchiveMode.Update))
             {
                 ZipArchiveEntry thisEntry = zipArchive.GetEntry(archiveEntry.FullName);
                 ZipArchiveEntry newEntry = zipArchive.GetEntry(destFileName);
+
+                // Determine if Overwrite is enabled and item exists.
+                if ((overwrite == false) && (newEntry != null))
+                {
+                    throw new Exception($"The item exists '{destFileName}'");
+                }
+
                 if (newEntry == null) {
                     newEntry = zipArchive.CreateEntry(destFileName);
                 }
@@ -313,11 +444,11 @@ namespace Microsoft.PowerShell.Commands
 
         public ZipFileItemStream Open(FileMode mode, FileAccess access)
         {
-            throw new Exception("Not Implemented Exception");
+            throw new NotImplementedException();
         }
         public ZipFileItemStream Open(FileMode mode, FileAccess access, FileShare share)
         {
-            throw new Exception("Not Implemented Exception");
+            throw new NotImplementedException();
         }
         public ZipFileItemStream OpenRead()
         {
@@ -327,7 +458,6 @@ namespace Microsoft.PowerShell.Commands
         public StreamReader OpenText()
         {
             return new StreamReader(Open(FileMode.Open));
-            //throw new Exception("Not Implemented Exception");
         }
         public ZipFileItemStream OpenWrite()
         {
@@ -358,6 +488,90 @@ namespace Microsoft.PowerShell.Commands
             fileStream.Dispose();
         }
 
+        #region DirectoryWalker commands
+
+        // Gets the Directory Information Stack
+        public static IEnumerable<ZipFileItemInfo> GetDirectories(PSDriveInfo drive, string path, int recurse, bool directory)
+        {
+            List<string> DirList = new List<string>();
+
+            WildcardPattern wildcardPattern = WildcardPattern.Get(path, WildcardOptions.CultureInvariant | WildcardOptions.Compiled);
+
+            using (ZipArchive zipArchive = ZipFile.Open(drive.Root, ZipArchiveMode.Read))
+            {
+                foreach (ZipArchiveEntry zipArchiveEntry in zipArchive.Entries)
+                {
+                    if (wildcardPattern.IsMatch(zipArchiveEntry.FullName))
+                    {
+                        yield return new ZipFileItemInfo(zipArchiveEntry, drive);
+                    }
+                }
+            }
+        }
+
+        public static void buildFolderPaths(PSDriveInfo drive)
+        {
+
+            using (ZipArchive zipArchive = ZipFile.Open(drive.Root, ZipArchiveMode.Update))
+            {
+                // Generate a list of items to create
+                List<string> dirList = new List<string>();
+
+                foreach (ZipArchiveEntry zipArchiveEntry in zipArchive.Entries)
+                {
+                    string fullName = zipArchiveEntry.FullName;
+
+                    // Check if this is NOT a directory
+                    if (!Path.EndsInDirectorySeparator(fullName))
+                    {
+
+                        fullName = (
+                                Path.GetDirectoryName(fullName) + Path.AltDirectorySeparatorChar
+                            ).Replace(
+                                Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar
+                        );
+
+                        if (String.IsNullOrEmpty(fullName))
+                        {
+                            continue;
+                        }
+                        
+                        var paths = enumFolderPaths(fullName);
+
+                        foreach (string path in paths)
+                        {
+                            if (zipArchive.GetEntry(path) == null)
+                            {
+                                if (!dirList.Contains(path))
+                                {
+                                    dirList.Add(path);
+                                }
+                            }
+                        }
+
+                    }
+
+                }
+
+                // Generate a list of directories
+                foreach (string dir in dirList)
+                {
+                    zipArchive.CreateEntry(dir);
+                }
+            }
+
+        }
+
+        private static IEnumerable<string> enumFolderPaths(string path)
+        {
+            int i = 0;
+            while((i = path.IndexOf(Path.AltDirectorySeparatorChar, i+1)) > -1)
+            {
+                yield return path.Substring(0, i+1);
+            }
+        }
+
+        #endregion
 
     }
     #endregion ZipFileItemInfo
