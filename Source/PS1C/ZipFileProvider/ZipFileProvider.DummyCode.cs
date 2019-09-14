@@ -47,6 +47,29 @@ namespace PS1C
             }
         }
 
+        internal void SZLog(string format, params string[] text)
+        {
+            StackTrace st = new StackTrace(true);
+
+            StackFrame sf = st.GetFrame(2);
+            WriteInformation(
+                new InformationRecord(
+                    String.Format("CallingMethod {0}", 
+                            "    at {0}: {1} {2}",
+                            sf.GetFileLineNumber(),
+                            sf.GetMethod().DeclaringType,
+                            sf.GetMethod()
+                    ),
+                    "this"
+                )
+            );
+            WriteInformation(
+                new InformationRecord(
+                    String.Format(format, text),
+                    "this"
+                )
+            );
+        }
 		#region ItemCmdletProvider
 		
         // Placeholder commands...
