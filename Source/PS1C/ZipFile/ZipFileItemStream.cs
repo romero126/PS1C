@@ -13,8 +13,7 @@ namespace Microsoft.PowerShell.Commands
 
         private ZipArchive _zipArchive;
         private ZipArchiveEntry _zipArchiveEntry;
-        private System.IO.Stream _zipArchiveEntryStream;
-        public System.IO.MemoryStream _stream;
+        public System.IO.Stream _stream;
 
         public bool _isClosed;
         public override long Length {
@@ -44,16 +43,14 @@ namespace Microsoft.PowerShell.Commands
         public override bool CanRead {
             get
             {
-                // Base permissions should still apply
-                return _zipArchiveEntryStream.CanRead;
+                return _stream.CanRead;
             }
         }
 
         public override bool CanWrite {
             get
             {
-                // Base permissions should still apply
-                return _zipArchiveEntryStream.CanWrite;
+                return _stream.CanWrite;
             }
         }
 
@@ -81,6 +78,7 @@ namespace Microsoft.PowerShell.Commands
             return _stream.Seek(offset, origin);
         }
 
+        // Todo: Make ZipFileItemStream use (ZipArchive archiveName) instead of string;
         public ZipFileItemStream(string archiveName, string path, System.IO.FileMode mode)
         {
             ZipArchiveMode zipArchiveMode = ZipArchiveMode.Read;
@@ -97,10 +95,8 @@ namespace Microsoft.PowerShell.Commands
                     break;
                 case FileMode.OpenOrCreate:
                     throw new Exception("Invalid Parameter OpenOrCreate not valid");
-                    break;
                 case FileMode.Truncate:
                     throw new Exception("Invalid Parameter Truncate not valid");
-                    break;
                 case FileMode.Append:
                     zipArchiveMode = ZipArchiveMode.Update;
                     break;
@@ -108,18 +104,8 @@ namespace Microsoft.PowerShell.Commands
             _zipArchive = System.IO.Compression.ZipFile.Open(archiveName, zipArchiveMode);
             _zipArchiveEntry = _zipArchive.GetEntry(path);
 
-            if (_zipArchiveEntry.Length >= ((int.MaxValue -56)/2))
-            {
-                // Note: 2gb - 57 is max va
-                throw PSTraceSource.NewArgumentOutOfRangeException(FileSystemProviderStrings.DriveMaxSizeError, "ZipFile Items must be below 1gb");
-            }
+            _stream = _zipArchiveEntry.Open();
 
-            _zipArchiveEntryStream = _zipArchiveEntry.Open();
-            this._stream = new MemoryStream();
-
-            // Note: This part is very Memory Intensive.
-            _zipArchiveEntryStream.CopyTo(_stream);
-            
             // Sets position to 0 so it can be fresh
             _stream.Position = 0;
         }
@@ -129,27 +115,16 @@ namespace Microsoft.PowerShell.Commands
         {
             if (!_isClosed)
             {
-                // Avoid writing back a value if opened with Read permissions.
-                if (_zipArchive.Mode != ZipArchiveMode.Read)
-                {
-                    _stream.Position = 0;
-                    // Write all of the buffer. 
-                    _zipArchiveEntryStream.Seek(0, SeekOrigin.Begin);
-                    _zipArchiveEntryStream.SetLength(0);
-                    
-                    _stream.WriteTo(_zipArchiveEntryStream);
-                }
-
-                _zipArchiveEntryStream.Flush();
-                
+                _stream.Flush();
                 _stream.Dispose();
-                _zipArchiveEntryStream.Dispose();
 
                 _zipArchive.Dispose();
                 _zipArchive = null;
                 _isClosed = true;
+                base.Close();
                 GC.Collect();
             }
+
         }
 
         public void Dispose()
