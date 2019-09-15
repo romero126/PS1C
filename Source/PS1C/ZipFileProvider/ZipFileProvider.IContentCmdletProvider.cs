@@ -281,6 +281,14 @@ namespace PS1C
 
 		public void ClearContent(string path)
 		{
+
+            // Validate Parent Directory does not exist
+            if (!IsItemContainer(Path.GetDirectoryName(path)))
+            {
+                Console.WriteLine(path);
+                throw new Exception("Parent directory does not exist");
+            }
+
             StreamContentReaderWriter stream = null;
             path = NormalizePath(path);
             ZipFileItemInfo archiveFile = new ZipFileItemInfo(PSDriveInfo, path, true);
