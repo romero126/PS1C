@@ -120,7 +120,17 @@ namespace Microsoft.PowerShell.Commands
 
         public ZipArchive Archive {
             get {
+                if (archiveEntry.Archive.Entries.Count == 0)
+                {
+                    return null;
+                }
                 return archiveEntry.Archive;
+            }
+        }
+
+        public FileInfo FileSystemContainer {
+            get {
+                return new FileInfo(Drive.Root);
             }
         }
 
@@ -162,7 +172,7 @@ namespace Microsoft.PowerShell.Commands
 
             using (ZipArchive zipArchive = ZipFile.Open(drive.Root, ZipArchiveMode.Update))
             {
-                // Quick Archive 
+                // Quick Archive
                 archiveEntry = zipArchive.GetEntry(path);
 
                 if (archiveEntry == null)
@@ -223,6 +233,22 @@ namespace Microsoft.PowerShell.Commands
                 foreach (ZipArchiveEntry zipArchiveEntry in zipArchive.Entries)
                 {
                     yield return new ZipFileItemInfo(zipArchiveEntry, drive);
+                }
+            }
+        }
+
+        public static IEnumerable<ZipFileItemInfo> GetZipFileItemInfo(PSDriveInfo drive, string path)
+        {
+            IEnumerable<ZipFileItemInfo> results = GetZipFileItemInfo(drive);
+            path = path.TrimStart(Path.AltDirectorySeparatorChar).TrimStart(Path.DirectorySeparatorChar);
+
+            WildcardPattern wildcardPattern = WildcardPattern.Get(path, WildcardOptions.IgnoreCase | WildcardOptions.Compiled);
+
+            foreach (ZipFileItemInfo item in results)
+            {
+                if (wildcardPattern.IsMatch(Path.TrimEndingDirectorySeparator( item.FullArchiveName )))
+                {
+                    yield return item;
                 }
             }
         }
