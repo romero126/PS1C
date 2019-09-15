@@ -21,10 +21,30 @@ namespace PS1C
     {
         #region NavigationCmdletProvider
 
+        protected bool IsItemContainerContainsItems(string path)
+        {
+            bool result = false;
+
+            if (!Path.EndsInDirectorySeparator(path))
+            {
+                path += Path.DirectorySeparatorChar;
+            }
+            path += "*";
+            
+            ZipFileItemInfo[] items = ZipFileItemInfo.GetZipFileItemInfo(ZipFileDriveInfo, path).ToArray();
+
+            if (items.Length > 0)
+            {
+                result = true;
+            }
+
+            return result;
+        }
 
 		protected override bool IsItemContainer(string path)
 		{
             path = NormalizePath(path);
+            
             bool result = false;
             
             if ( String.IsNullOrEmpty(path) )
@@ -35,9 +55,6 @@ namespace PS1C
             {
                 result = true;
             }
-
-
-            // We need to fix this..
 
             if (!Path.EndsInDirectorySeparator(path))
             {
