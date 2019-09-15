@@ -93,7 +93,6 @@ namespace Microsoft.PowerShell.Commands
         }
         #endregion
 
-        
         public ZipFileDirectoryInfo(PSDriveInfo psDriveInfo)
         {
             Root = this;
