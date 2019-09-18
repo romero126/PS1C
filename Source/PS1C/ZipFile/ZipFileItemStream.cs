@@ -11,8 +11,7 @@ namespace Microsoft.PowerShell.Commands
     public class ZipFileItemStream : System.IO.Stream
     {
 
-        private ZipArchive _zipArchive;
-        private ZipArchiveEntry _zipArchiveEntry;
+        private ZipFileItemInfo _itemInfo;
         public System.IO.Stream _stream;
 
         public bool _isClosed;
@@ -78,39 +77,17 @@ namespace Microsoft.PowerShell.Commands
             return _stream.Seek(offset, origin);
         }
 
-        // Todo: Make ZipFileItemStream use (ZipArchive archiveName) instead of string;
-        public ZipFileItemStream(string archiveName, string path, System.IO.FileMode mode)
+        public ZipFileItemStream(ZipFileItemInfo entry)
         {
-            ZipArchiveMode zipArchiveMode = ZipArchiveMode.Read;
-            switch (mode)
-            {
-                case FileMode.CreateNew:
-                    zipArchiveMode = ZipArchiveMode.Create;
-                    break;
-                case FileMode.Create:
-                    zipArchiveMode = ZipArchiveMode.Create;
-                    break;
-                case FileMode.Open:
-                    zipArchiveMode = ZipArchiveMode.Read;
-                    break;
-                case FileMode.OpenOrCreate:
-                    throw new Exception("Invalid Parameter OpenOrCreate not valid");
-                case FileMode.Truncate:
-                    throw new Exception("Invalid Parameter Truncate not valid");
-                case FileMode.Append:
-                    zipArchiveMode = ZipArchiveMode.Update;
-                    break;
-            }
-            _zipArchive = System.IO.Compression.ZipFile.Open(archiveName, zipArchiveMode);
-            _zipArchiveEntry = _zipArchive.GetEntry(path);
+            _itemInfo = entry;
 
-            _stream = _zipArchiveEntry.Open();
 
+            ZipArchive archive = _itemInfo.Drive.LockArchive(_itemInfo.FullArchiveName);
+            
+            _stream = archive.GetEntry(_itemInfo.FullArchiveName).Open();
             // Sets position to 0 so it can be fresh
             _stream.Position = 0;
         }
-
-
         public override void Close()
         {
             if (!_isClosed)
@@ -118,10 +95,11 @@ namespace Microsoft.PowerShell.Commands
                 _stream.Flush();
                 _stream.Dispose();
 
-                _zipArchive.Dispose();
-                _zipArchive = null;
+                _itemInfo.Drive.UnlockArchive(_itemInfo.FullArchiveName);
+
                 _isClosed = true;
                 base.Close();
+
                 GC.Collect();
             }
 
