@@ -1,22 +1,22 @@
 ChildItem Cmdlets
-	[?] Get-ChildItem
-		[?] 
+	[X] Get-ChildItem
+		[X] Tab Completion
 
 Content Cmdlets
-	[?] Add-Content
-	[?] Clear-Content
-	[?] Get-Content
-	[?] Set-Content
+	[X] Add-Content
+	[X] Clear-Content
+	[X] Get-Content
+	[X] Set-Content
 
 Item Cmdlets
 	[?] Clear-Item
 	[?] Copy-Item
-	[?] Get-Item
-	[?] Invoke-Item
+	[X] Get-Item
+	[X] Invoke-Item
 	[?] Move-Item
-	[?] New-Item
-	[?] Remove-Item
-	[?] Rename-Item
+	[X] New-Item
+	[X] Remove-Item
+	[X] Rename-Item
 	[?] Set-Item
 
 ItemProperty cmdlets
@@ -30,21 +30,21 @@ ItemProperty cmdlets
 	[?] Set-ItemProperty
 
 Location cmdlets
-	[?] Get-Location
-	[?] Pop-Location
-	[?] Push-Location
-	[?] Set-Location
+	[X] Get-Location
+	[X] Pop-Location
+	[X] Push-Location
+	[X] Set-Location
 	[?] Path cmdlets
-	[?] Join-Path
-	[?] Convert-Path
-	[?] Split-Path
-	[?] Resolve-Path
-	[?] Test-Path
+	[X] Join-Path
+	[X] Convert-Path
+	[X] Split-Path
+	[X] Resolve-Path
+	[X] Test-Path
 
 PSDrive Cmdlets
-	[?] New-PSDrive
-	[?] Get-PSDrive
-	[?] Remove-PSDrive
+	[X] New-PSDrive
+	[X] Get-PSDrive
+	[X] Remove-PSDrive
 
 PSProvider Cmdlets
 	[X] Get-PSProvider
@@ -52,14 +52,11 @@ PSProvider Cmdlets
 
 Todo List:
 	Invoke Scripts Nativly
-	Create File
-	Write File
 	Add Additional Property Information.
+	Add Check on New-Drive to see if ZipFile is already open in the provider lists.
 
 Request for Information:
 	Need information on how to call scripts without calling get-content.
 	Example: Invoke / .\ScriptName.ps1
-
-
 
 
