@@ -23,6 +23,7 @@ namespace Microsoft.PowerShell.Commands
         }
 
         public DirectoryInfo Directory;                      // {get;}
+
         public string DirectoryName
         {
             get {
@@ -34,6 +35,7 @@ namespace Microsoft.PowerShell.Commands
                 return Path.GetDirectoryName(FullName);
             }
         }
+
         public bool Exists {
             get {
                 return true;
@@ -45,6 +47,7 @@ namespace Microsoft.PowerShell.Commands
                 return null; //archiveEntry.Crc32;
             }
         }
+
         public string Extension {
             get {
                 return Path.GetExtension(FullName);
@@ -56,6 +59,7 @@ namespace Microsoft.PowerShell.Commands
                 return Path.GetFileNameWithoutExtension(FullName);
             }
         }
+
         public string FullName {
             get {
                 return String.Format("{0}:\\{1}", Drive.Name, ArchiveEntry.FullName).Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
@@ -67,7 +71,6 @@ namespace Microsoft.PowerShell.Commands
                 return ArchiveEntry.FullName.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
             }
         }
-
 
         public bool IsReadOnly
         {
@@ -91,6 +94,7 @@ namespace Microsoft.PowerShell.Commands
                 ArchiveEntry.LastWriteTime = new DateTimeOffset(value);
             }
         }
+
         public DateTime LastWriteTimeUtc
         {
             get {
@@ -100,16 +104,19 @@ namespace Microsoft.PowerShell.Commands
                 this.LastWriteTime = value.ToLocalTime();
             }
         }
+
         public long Length {
             get {
                 return ArchiveEntry.Length;
             }
         }
+
         public long CompressedLength {
             get {
                 return ArchiveEntry.CompressedLength;
             }
         }
+
         public string Name {
             get {
                 if (IsContainer)
@@ -189,6 +196,7 @@ namespace Microsoft.PowerShell.Commands
                         // Create an entry if not exists
                         zipArchive.CreateEntry(path);
                         ArchiveEntry = zipArchive.GetEntry(path);
+
                         if (ArchiveEntry == null)
                         {
                             throw new IOException(FileSystemProviderStrings.PermissionError);
@@ -200,6 +208,7 @@ namespace Microsoft.PowerShell.Commands
                         string error = StringUtil.Format(FileSystemProviderStrings.ItemNotFound, path);
                         throw new IOException(error);
                     }
+
                 }
 
             }
@@ -209,6 +218,7 @@ namespace Microsoft.PowerShell.Commands
             finally {
                 drive.UnlockArchive(ZipFileProviderStrings.DriveGetItem);
             }
+
         }
         
         // Search 
@@ -261,7 +271,9 @@ namespace Microsoft.PowerShell.Commands
                 {
                     yield return item;
                 }
+
             }
+
         }
         public static IEnumerable<ZipFileItemInfo> GetZipFileItemInfo(ZipFilePSDriveInfo drive)
         {
@@ -289,6 +301,7 @@ namespace Microsoft.PowerShell.Commands
                     yield return item;
                 }
             }
+
         }
 
         // Simplex search
@@ -326,6 +339,7 @@ namespace Microsoft.PowerShell.Commands
 
             return results.ToArray();
         }
+
         public static bool ItemExists(ZipFilePSDriveInfo drive, string path, bool directory)
         {
             path = path.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
@@ -343,7 +357,9 @@ namespace Microsoft.PowerShell.Commands
                 }
             }
             return false;
+
         }
+
         public StreamWriter AppendText()
         {
             return new StreamWriter( OpenWrite() );
@@ -366,11 +382,8 @@ namespace Microsoft.PowerShell.Commands
             return new StreamWriter( OpenWrite() );
         }
         
-
-        
         public void Delete()
         {
-
             using (ZipArchive zipArchive = ZipFile.Open(Drive.Root, ZipArchiveMode.Update))
             {
                 ZipArchiveEntry zipArchiveEntry = zipArchive.GetEntry(ArchiveEntry.FullName);
@@ -407,7 +420,6 @@ namespace Microsoft.PowerShell.Commands
         {
             CopyTo(destFileName, true, false);
         }
-
 
         internal void CopyTo(string destFileName, bool removeItem, bool overwrite)
         {
@@ -477,6 +489,7 @@ namespace Microsoft.PowerShell.Commands
                 }
             }
         }
+
         internal void CopyToArchive(string destFileName, bool removeItem, bool overwrite)
         {
             ZipArchive zipArchive = Archive;
@@ -506,10 +519,12 @@ namespace Microsoft.PowerShell.Commands
                 }
             }
         }
+
         public ZipFileItemStream Open()
         {
             return new ZipFileItemStream(this);
         }
+
         public ZipFileItemStream Open(FileMode mode)
         {
             return new ZipFileItemStream(this);
@@ -519,10 +534,12 @@ namespace Microsoft.PowerShell.Commands
         {
             throw new NotImplementedException();
         }
+
         public ZipFileItemStream Open(FileMode mode, FileAccess access, FileShare share)
         {
             throw new NotImplementedException();
         }
+
         public ZipFileItemStream OpenRead()
         {
             return Open();
@@ -532,6 +549,7 @@ namespace Microsoft.PowerShell.Commands
         {
             return new StreamReader(Open());
         }
+
         public ZipFileItemStream OpenWrite()
         {
             return Open();
@@ -551,6 +569,7 @@ namespace Microsoft.PowerShell.Commands
             }
             return result;
         }
+        
         internal void ClearContent()
         {
             ZipFileItemStream fileStream = Open(FileMode.Append);
