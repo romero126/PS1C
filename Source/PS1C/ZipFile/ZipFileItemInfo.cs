@@ -490,32 +490,33 @@ namespace Microsoft.PowerShell.Commands
 
         internal void CopyToArchive(string destFileName, bool removeItem, bool overwrite)
         {
-            ZipArchive zipArchive = Archive;
-            //using (ZipArchive zipArchive = ZipFile.Open(Drive.Root, ZipArchiveMode.Update))
+            ZipArchive zipArchive = Drive.LockArchive(FullArchiveName);
+
+            ZipArchiveEntry thisEntry = zipArchive.GetEntry(ArchiveEntry.FullName);
+            ZipArchiveEntry newEntry = zipArchive.GetEntry(destFileName);
+
+            // Determine if Overwrite is enabled and item exists.
+            if ((overwrite == false) && (newEntry != null))
             {
-                ZipArchiveEntry thisEntry = zipArchive.GetEntry(ArchiveEntry.FullName);
-                ZipArchiveEntry newEntry = zipArchive.GetEntry(destFileName);
+                throw new Exception($"The item exists '{destFileName}'");
+            }
 
-                // Determine if Overwrite is enabled and item exists.
-                if ((overwrite == false) && (newEntry != null))
-                {
-                    throw new Exception($"The item exists '{destFileName}'");
-                }
+            if (newEntry == null) {
+                newEntry = zipArchive.CreateEntry(destFileName);
+            }
 
-                if (newEntry == null) {
-                    newEntry = zipArchive.CreateEntry(destFileName);
-                }
-
-                using (Stream thisStream = thisEntry.Open())
+            using (Stream thisStream = thisEntry.Open())
                 using (Stream newStream = newEntry.Open())
                 {
                     thisStream.CopyTo(newStream);
                 }
-                if (removeItem)
-                {
-                    thisEntry.Delete();
-                }
+            if (removeItem)
+            {
+                thisEntry.Delete();
             }
+
+            Drive.UnlockArchive(FullArchiveName);
+
         }
 
         public ZipFileItemStream Open()
