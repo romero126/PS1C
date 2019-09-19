@@ -475,19 +475,17 @@ namespace Microsoft.PowerShell.Commands
                 throw new Exception($"The item exists '{destFileName}'");
             }
 
-            ZipArchive zipArchive = Archive;
-            //using (ZipArchive zipArchive = ZipFile.Open(Drive.Root, ZipArchiveMode.Update))
-            {   
-                ZipArchiveEntry thisEntry = zipArchive.GetEntry(ArchiveEntry.FullName);
+            ZipArchive zipArchive = Drive.LockArchive(FullArchiveName);
+            ZipArchiveEntry thisEntry = zipArchive.GetEntry(ArchiveEntry.FullName);
 
-                // Todo Check if file already exists.
-                thisEntry.ExtractToFile(destFileName);
+            thisEntry.ExtractToFile(destFileName);
 
-                if (removeItem)
-                {
-                    thisEntry.Delete();
-                }
+            if (removeItem)
+            {
+                thisEntry.Delete();
             }
+
+            Drive.UnlockArchive(FullArchiveName);
         }
 
         internal void CopyToArchive(string destFileName, bool removeItem, bool overwrite)
@@ -569,7 +567,7 @@ namespace Microsoft.PowerShell.Commands
             }
             return result;
         }
-        
+
         internal void ClearContent()
         {
             ZipFileItemStream fileStream = Open(FileMode.Append);
