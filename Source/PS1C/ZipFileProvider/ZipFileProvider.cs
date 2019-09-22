@@ -145,12 +145,12 @@ namespace PS1C
 			}
             // TODO: Code cleanup
             drive = new PSDriveInfo(drive.Name, drive.Provider, zipFile.FullName, drive.Description, drive.Credential, drive.DisplayRoot);
-            ZipFilePSDriveInfo newdrive = new ZipFilePSDriveInfo(drive);
+            ZipFilePSDriveInfo newDrive = new ZipFilePSDriveInfo(drive);
 
             // Build folder paths on initialize
-            ZipFileDriveInfo.buildFolderPaths();
+            newDrive.buildFolderPaths();
 
-            return base.NewDrive( newdrive );
+            return base.NewDrive( newDrive );
 		}
 
         #endregion DriveCmdletProvider members
