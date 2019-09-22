@@ -724,7 +724,7 @@ namespace PS1C
             string type,
             object value)
         {
-            //ItemType itemType = ItemType.Unknown;
+            ItemType itemType = ItemType.Unknown;
             bool CreateIntermediateDirectories = false;
 
             // Verify parameters
@@ -733,16 +733,30 @@ namespace PS1C
                 throw PSTraceSource.NewArgumentException("path");
             }
 
-            if (string.IsNullOrEmpty(type))
+            if (String.IsNullOrEmpty(type))
             {
                 type = "file";
+            }
+
+            itemType = GetItemType(type);
+
+            // Determine item Type
+            if (itemType == ItemType.Unknown)
+            {
+                if (Path.EndsInDirectorySeparator(path))
+                {
+                    itemType = ItemType.Directory;
+                }
+                else
+                {
+                    itemType = ItemType.File;
+                }
             }
 
             path = NormalizePath(path);
 
             if (Force)
             {
-                //ZipFileItemInfo newDirectory = new ZipFileItemInfo(ZipFileDriveInfo, Path.GetDirectoryName(path).Replace(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)+Path.AltDirectorySeparatorChar, true);
                 ZipFileItemInfo NewFile = new ZipFileItemInfo(ZipFileDriveInfo, path, true);
                 ZipFileItemInfo.buildFolderPaths(ZipFileDriveInfo);
             }
@@ -759,19 +773,33 @@ namespace PS1C
             }
 
 
-            if (type == "file")
+            if (itemType == ItemType.Directory)
+            {
+
+                if (Path.EndsInDirectorySeparator(path))
+                {
+                    Console.WriteLine($"Path: '{path}'");
+                }
+                if (!Path.EndsInDirectorySeparator(path))
+                {
+                    path += Path.AltDirectorySeparatorChar;
+                }
+
+                Console.WriteLine($"Creating Directory Item {path}");
+
+                ZipFileItemInfo newItem = new ZipFileItemInfo(ZipFileDriveInfo, path, true);
+                //newItem = new ZipFileItemInfo(ZipFileDriveInfo, path, true);
+                Console.WriteLine($"NewItem: '{newItem.FullArchiveName}'");
+
+                newItem.ClearContent();
+            }
+            else if (itemType == ItemType.File)
             {
                 ZipFileItemInfo newItem = new ZipFileItemInfo(ZipFileDriveInfo, path, true);
-                if (value != null)
-                {
-                    using (StreamWriter writer = newItem.AppendText())
-                    {
-                        writer.Write(value.ToString());
-                        writer.Flush();
-                        writer.Dispose();
-                    }
-                }
+                newItem = new ZipFileItemInfo(ZipFileDriveInfo, path, true);
+                //newItem.ClearContent();
             }
+
         }
 
         // Note: Omitted the following commands
@@ -779,8 +807,36 @@ namespace PS1C
         // WinCreateHardLink
         // WinCreateJunction
         // CheckItemExists
-        // ItemType
-        // GetItemType
+
+        private enum ItemType
+        {
+            Unknown,
+            File,
+            Directory
+        };
+
+        private static ItemType GetItemType(string input)
+        {
+            ItemType itemType = ItemType.Unknown;
+
+            WildcardPattern typeEvaluator =
+                WildcardPattern.Get(input + "*",
+                                     WildcardOptions.IgnoreCase |
+                                     WildcardOptions.Compiled);
+
+            if (typeEvaluator.IsMatch("directory") ||
+                typeEvaluator.IsMatch("container"))
+            {
+                itemType = ItemType.Directory;
+            }
+            else if (typeEvaluator.IsMatch("file"))
+            {
+                itemType = ItemType.File;
+            }
+
+            return itemType;
+        }
+
         // CreateDirectory
         // CreateIntermediateDirectories
 
