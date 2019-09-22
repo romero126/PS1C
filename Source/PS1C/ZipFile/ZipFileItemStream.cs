@@ -82,9 +82,9 @@ namespace Microsoft.PowerShell.Commands
             _itemInfo = entry;
 
 
-            ZipArchive archive = _itemInfo.Drive.LockArchive(_itemInfo.FullArchiveName);
+            ZipArchive archive = _itemInfo.Drive.LockArchive(_itemInfo.ArchiveEntry.FullName);
             
-            _stream = archive.GetEntry(_itemInfo.FullArchiveName).Open();
+            _stream = archive.GetEntry(_itemInfo.ArchiveEntry.FullName).Open();
             // Sets position to 0 so it can be fresh
             _stream.Position = 0;
         }
@@ -95,7 +95,7 @@ namespace Microsoft.PowerShell.Commands
                 _stream.Flush();
                 _stream.Dispose();
 
-                _itemInfo.Drive.UnlockArchive(_itemInfo.FullArchiveName);
+                _itemInfo.Drive.UnlockArchive(_itemInfo.ArchiveEntry.FullName);
 
                 _isClosed = true;
                 base.Close();
