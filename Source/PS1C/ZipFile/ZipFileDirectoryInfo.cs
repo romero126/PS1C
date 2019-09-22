@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.PowerShell.Commands;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -6,6 +7,7 @@ using System.IO.Compression;
 using System.Management.Automation;
 using System.Management.Automation.Provider;
 using PS1C.Archive;
+
 // ZipFile
 namespace Microsoft.PowerShell.Commands
 {
@@ -36,8 +38,6 @@ namespace Microsoft.PowerShell.Commands
         }
 
         /*
-
-
 
             Create                    Method         void Create(), void Create(System.Security.AccessControl.DirectorySecurity ...
             CreateObjRef              Method         System.Runtime.Remoting.ObjRef CreateObjRef(type requestedType)
@@ -93,7 +93,7 @@ namespace Microsoft.PowerShell.Commands
         }
         #endregion
 
-        public ZipFileDirectoryInfo(PSDriveInfo psDriveInfo)
+        public ZipFileDirectoryInfo(ZipFilePSDriveInfo psDriveInfo)
         {
             Root = this;
 
