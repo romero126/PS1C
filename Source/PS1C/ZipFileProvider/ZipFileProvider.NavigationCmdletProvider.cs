@@ -31,7 +31,7 @@ namespace PS1C
             }
             path += "*";
             
-            ZipFileItemInfo[] items = ZipFileItemInfo.GetZipFileItemInfo(ZipFileDriveInfo, path).ToArray();
+            ZipFileItemInfo[] items = ZipFileDriveInfo.GetItem(path).ToArray();
 
             if (items.Length > 0)
             {
@@ -45,29 +45,19 @@ namespace PS1C
 		{
             path = NormalizePath(path);
             
-            bool result = false;
+
             
             if ( String.IsNullOrEmpty(path) )
             {
-                result = true;
+                return true;
             }
             else if ( path == "\\" || path == "/")
             {
-                result = true;
+                return true;
             }
 
-            if (!Path.EndsInDirectorySeparator(path))
-            {
-                path += Path.AltDirectorySeparatorChar;
-            }
 
-            bool itemExists = ItemExists(path);
-            if (itemExists)
-            {
-                result = true;
-            }
-
-			return result;
+            return ZipFileDriveInfo.IsItemContainer(path);
 		}
         internal ZipFileItemInfo GetItemHelper(string path)
 		{

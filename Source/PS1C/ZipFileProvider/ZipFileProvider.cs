@@ -37,7 +37,7 @@ namespace PS1C
         protected override string[] ExpandPath(string path)
         {
             path = NormalizePath(path);
-            IEnumerable<ZipFileItemInfo> zipFileItemInfoList = ZipFileItemInfo.GetZipFileItemInfo(ZipFileDriveInfo, path, true, true);
+            IEnumerable<ZipFileItemInfo> zipFileItemInfoList = ZipFileDriveInfo.GetItem(path, true, true);
             return zipFileItemInfoList.Select(i => i.FullName).ToArray();
         }
 
@@ -254,10 +254,8 @@ namespace PS1C
             try
             {
                 
-                //ZipFileItemInfo result = new ZipFileItemInfo(ZipFileDriveInfo, path);
-                IEnumerable<ZipFileItemInfo> result = ZipFileItemInfo.GetZipFileItemInfo(ZipFileDriveInfo, path, true, true);
+                IEnumerable<ZipFileItemInfo> result = ZipFileDriveInfo.GetItem(path, true, true);
 
-                // FileSystemInfo result = GetFileSystemItem(path, ref isContainer, false);
                 if (result != null)
                 {
                     // Otherwise, return the item itself.
@@ -331,7 +329,7 @@ namespace PS1C
                 }
                 else if (Path.GetExtension(path) == ".ps1") {
                     
-                    IEnumerable<ZipFileItemInfo> zipFileItemInfoList = ZipFileItemInfo.GetZipFileItemInfo(ZipFileDriveInfo, path, false, true);
+                    IEnumerable<ZipFileItemInfo> zipFileItemInfoList = ZipFileDriveInfo.GetItem(path, false, true);
                     Object[] scriptargs = null;
                     foreach (ZipFileItemInfo zipFileItemInfo in zipFileItemInfoList)
                     {
@@ -521,14 +519,17 @@ namespace PS1C
                         path += "*";
                     }
 
+                    path = path.TrimStart(Path.AltDirectorySeparatorChar);
+                    
+                    Console.WriteLine($"GetPathItems '{path}'");
                     // Only the Root directory is looked at for this scenario. 
-                    List<ZipFileItemInfo> fileInfoItems = ZipFileItemInfo.GetZipFileItemInfo(ZipFileDriveInfo, path, true, true).ToList();
-
+                    List<ZipFileItemInfo> fileInfoItems = ZipFileDriveInfo.GetItem(path, true, true).ToList();
 
                     if (fileInfoItems.Count == 0)
                     {
                         return;
                     }
+
                     // Sort the files
                     fileInfoItems = fileInfoItems.OrderBy(c => c.FullName, StringComparer.CurrentCultureIgnoreCase).ToList();
 
@@ -573,6 +574,7 @@ namespace PS1C
             {
                 Console.WriteLine("Please help me out. Submit an issue with what you did in order to get this to trigger");
                 Console.WriteLine("https://github.com/romero126/PS1C");
+
                 String error = StringUtil.Format(FileSystemProviderStrings.ItemDoesNotExist, path);
                 Exception e = new IOException(error);
                 WriteError(new ErrorRecord(
@@ -881,10 +883,10 @@ namespace PS1C
             if (isItemContainer)
             {
                 // Recursivly remove items
-                archiveItems = ZipFileItemInfo.GetZipFileItemInfo(ZipFileDriveInfo, path+"*");
+                archiveItems = ZipFileDriveInfo.GetItem(path+"*");
             }
             else {
-                archiveItems = ZipFileItemInfo.GetZipFileItemInfo(ZipFileDriveInfo, path, true, true);
+                archiveItems = ZipFileDriveInfo.GetItem(path, true, true);
             }
 
 
@@ -993,7 +995,7 @@ namespace PS1C
 
                 // First see if the file exists
                 try {
-                    if (ZipFileItemInfo.ItemExists(ZipFileDriveInfo, path, true))
+                    if (ZipFileDriveInfo.ItemExists(path))
                     {
                         result = true;
                     }
@@ -1145,13 +1147,8 @@ namespace PS1C
                 destinationPath = destinationPath.Remove(0, 2);
             }
 
-            bool pathIsDirectory = false;
+            bool pathIsDirectory = ZipFileDriveInfo.IsItemContainer(path);
             bool destIsDirectory = false;
-
-            if (ZipFileItemInfo.ItemExists(ZipFileDriveInfo, path, true))
-            {
-                pathIsDirectory = true;
-            }
 
             if (Path.EndsInDirectorySeparator(destinationPath))
             {
@@ -1182,11 +1179,11 @@ namespace PS1C
                 IEnumerable<ZipFileItemInfo> files;
                 if (pathIsDirectory)
                 {
-                    files = ZipFileItemInfo.GetZipFileItemInfo(ZipFileDriveInfo, path+"/*", true, true);
+                    files = ZipFileDriveInfo.GetItem(path+"/*", true, true);
                 }
                 else
                 {
-                    files = ZipFileItemInfo.GetZipFileItemInfo(ZipFileDriveInfo, path, true, true);
+                    files = ZipFileDriveInfo.GetItem(path, true, true);
                 }
 
                 // Confirm the move with the user
