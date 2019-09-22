@@ -148,7 +148,7 @@ namespace PS1C
             ZipFilePSDriveInfo newdrive = new ZipFilePSDriveInfo(drive);
 
             // Build folder paths on initialize
-            ZipFileItemInfo.buildFolderPaths(newdrive);
+            ZipFileDriveInfo.buildFolderPaths();
 
             return base.NewDrive( newdrive );
 		}
@@ -760,7 +760,7 @@ namespace PS1C
             if (Force)
             {
                 ZipFileItemInfo NewFile = new ZipFileItemInfo(ZipFileDriveInfo, path, true);
-                ZipFileItemInfo.buildFolderPaths(ZipFileDriveInfo);
+                ZipFileDriveInfo.buildFolderPaths();
             }
 
             // Validate Parent Directory does not exist

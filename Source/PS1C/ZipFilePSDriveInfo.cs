@@ -162,6 +162,68 @@ namespace Microsoft.PowerShell.Commands
 		{
 			return ItemExists(path, true);
 		}
+
+
+		public void buildFolderPaths()
+        {
+
+            try {
+                ZipArchive zipArchive = LockArchive(ZipFileProviderStrings.DriveBuildFolderPaths);
+
+                // Generate a list of items to create
+                List<string> dirList = new List<string>();
+                foreach (ZipArchiveEntry entry in zipArchive.Entries)
+                {
+                    string fullName = entry.FullName;
+                    if (Path.EndsInDirectorySeparator(fullName))
+                    {
+                        continue;
+                    }
+
+                    fullName = Path.GetDirectoryName(fullName) + Path.AltDirectorySeparatorChar;
+                    fullName = fullName.Replace(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+
+                    if (String.IsNullOrEmpty(fullName))
+                    {
+                        continue;
+                    }
+                    var paths = enumFolderPaths(fullName);
+
+                    foreach (string path in paths)
+                    {
+                        if (zipArchive.GetEntry(path) == null)
+                        {
+                            if (!dirList.Contains(path))
+                            {
+                                dirList.Add(path);
+                            }
+                        }
+                    }
+                }
+                
+                // Generate a list of directories
+                foreach (string dir in dirList)
+                {
+                    zipArchive.CreateEntry(dir);
+                }
+
+            }
+            catch(Exception e) {
+                throw e;
+            }
+            finally {
+                UnlockArchive(ZipFileProviderStrings.DriveBuildFolderPaths);
+            }
+        }
+
+        private static IEnumerable<string> enumFolderPaths(string path)
+        {
+            int i = 0;
+            while((i = path.IndexOf(Path.AltDirectorySeparatorChar, i+1)) > -1)
+            {
+                yield return path.Substring(0, i+1);
+            }
+        }
     }
 
 }
