@@ -43,6 +43,11 @@ namespace PS1C
 
             path = NormalizePath(path);
 
+            if (IsItemContainer(path))
+            {
+                throw new Exception("You cannot read the contents of a folder");
+            }
+
             // Defaults for the file read operation
             string delimiter = "\n";
 
@@ -234,6 +239,10 @@ namespace PS1C
             if (!IsItemContainer(Path.GetDirectoryName(path)))
             {
                 throw new Exception("Parent directory does not exist");
+            }
+            if (IsItemContainer(path))
+            {
+                throw new Exception("You cannot write to a folder");
             }
 
             ZipFileItemInfo archiveFile = new ZipFileItemInfo(ZipFileDriveInfo, path, true);
