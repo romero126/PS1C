@@ -97,7 +97,7 @@ namespace Microsoft.PowerShell.Commands
         {
             IEnumerable<ZipFileItemInfo> results = GetItem();
 
-			path = Path.TrimEndingDirectorySeparator(path).Replace(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+			path = Path.TrimEndingDirectorySeparator(path).Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
 
             WildcardPattern wildcardPattern = WildcardPattern.Get(path, WildcardOptions.IgnoreCase | WildcardOptions.Compiled);
 
@@ -113,9 +113,7 @@ namespace Microsoft.PowerShell.Commands
         public IEnumerable<ZipFileItemInfo> GetItem(string path, bool directory, bool file)
         {
             IEnumerable<ZipFileItemInfo> results = GetItem(path);
-
             WildcardPattern wildcardPattern = WildcardPattern.Get(path, WildcardOptions.IgnoreCase | WildcardOptions.Compiled);
-
             path = path.TrimStart(Path.AltDirectorySeparatorChar).TrimStart(Path.DirectorySeparatorChar);
 
             foreach (ZipFileItemInfo item in results)
@@ -151,7 +149,7 @@ namespace Microsoft.PowerShell.Commands
                 {
                     return true;
                 }
-				
+
                 if (directory && (Path.TrimEndingDirectorySeparator(path) == Path.TrimEndingDirectorySeparator(i.FullArchiveName)))
                 {
                     return true;
