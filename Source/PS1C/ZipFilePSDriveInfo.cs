@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Management.Automation;
 using System.Management.Automation.Provider;
 using System.IO;
@@ -80,7 +81,89 @@ namespace Microsoft.PowerShell.Commands
 			Archive = ZipFile.Open(driveInfo.Root, ZipArchiveMode.Update);
 		}
 		
-		
+		public IEnumerable<ZipFileItemInfo> GetItem()
+        {
+            ZipArchive zipArchive = LockArchive(ZipFileProviderStrings.DriveGetChildItems);
+
+            foreach (ZipArchiveEntry zipArchiveEntry in zipArchive.Entries)
+            {
+                yield return new ZipFileItemInfo(zipArchiveEntry, this);
+            }
+
+            UnlockArchive(ZipFileProviderStrings.DriveGetChildItems);
+        }
+
+        public IEnumerable<ZipFileItemInfo> GetItem(string path)
+        {
+            IEnumerable<ZipFileItemInfo> results = GetItem();
+
+			path = Path.TrimEndingDirectorySeparator(path).Replace(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+
+            WildcardPattern wildcardPattern = WildcardPattern.Get(path, WildcardOptions.IgnoreCase | WildcardOptions.Compiled);
+
+            foreach (ZipFileItemInfo item in results)
+            {
+                if (wildcardPattern.IsMatch(Path.TrimEndingDirectorySeparator( item.FullArchiveName )))
+                {
+                    yield return item;
+                }
+            }
+        }
+
+        public IEnumerable<ZipFileItemInfo> GetItem(string path, bool directory, bool file)
+        {
+            IEnumerable<ZipFileItemInfo> results = GetItem(path);
+
+            WildcardPattern wildcardPattern = WildcardPattern.Get(path, WildcardOptions.IgnoreCase | WildcardOptions.Compiled);
+
+            path = path.TrimStart(Path.AltDirectorySeparatorChar).TrimStart(Path.DirectorySeparatorChar);
+
+            foreach (ZipFileItemInfo item in results)
+            {
+                if ( Path.GetDirectoryName(path) != Path.GetDirectoryName( Path.TrimEndingDirectorySeparator(item.FullArchiveName) ) )
+                {
+                    continue;
+                }
+
+                if ((directory && item.IsContainer) || (file && !item.IsContainer))
+                {
+                    yield return item;
+                }
+
+            }
+        }
+
+		public bool ItemExists(string path)
+		{
+			// Return true if either condition is met.
+			return ItemExists(path, false) || ItemExists(path, true);
+		}
+
+        public bool ItemExists(string path, bool directory)
+        {
+            path = path.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+			
+            List<ZipFileItemInfo> items = GetItem().ToList();
+
+            foreach (ZipFileItemInfo i in items)
+            {
+                if (!directory && (path == i.FullArchiveName))
+                {
+                    return true;
+                }
+				
+                if (directory && (Path.TrimEndingDirectorySeparator(path) == Path.TrimEndingDirectorySeparator(i.FullArchiveName)))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+		public bool IsItemContainer(string path)
+		{
+			return ItemExists(path, true);
+		}
     }
 
 }
