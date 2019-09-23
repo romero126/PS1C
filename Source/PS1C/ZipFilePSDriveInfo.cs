@@ -150,7 +150,7 @@ namespace Microsoft.PowerShell.Commands
                     return true;
                 }
 
-                if (directory && (Path.TrimEndingDirectorySeparator(path) == Path.TrimEndingDirectorySeparator(i.FullArchiveName)))
+                if (directory && Path.EndsInDirectorySeparator(i.FullArchiveName) && (Path.TrimEndingDirectorySeparator(path) == Path.TrimEndingDirectorySeparator(i.FullArchiveName)))
                 {
                     return true;
                 }
