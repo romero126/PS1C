@@ -56,7 +56,6 @@ namespace PS1C
                 return true;
             }
 
-
             return ZipFileDriveInfo.IsItemContainer(path);
 		}
         internal ZipFileItemInfo GetItemHelper(string path)
