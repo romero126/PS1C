@@ -777,29 +777,27 @@ namespace PS1C
 
             if (itemType == ItemType.Directory)
             {
-
-                if (Path.EndsInDirectorySeparator(path))
-                {
-                    Console.WriteLine($"Path: '{path}'");
-                }
                 if (!Path.EndsInDirectorySeparator(path))
                 {
                     path += Path.AltDirectorySeparatorChar;
                 }
 
-                Console.WriteLine($"Creating Directory Item {path}");
-
                 ZipFileItemInfo newItem = new ZipFileItemInfo(ZipFileDriveInfo, path, true);
-                //newItem = new ZipFileItemInfo(ZipFileDriveInfo, path, true);
-                Console.WriteLine($"NewItem: '{newItem.FullArchiveName}'");
 
-                newItem.ClearContent();
             }
             else if (itemType == ItemType.File)
             {
                 ZipFileItemInfo newItem = new ZipFileItemInfo(ZipFileDriveInfo, path, true);
                 newItem = new ZipFileItemInfo(ZipFileDriveInfo, path, true);
-                //newItem.ClearContent();
+                if (value != null)
+                {
+                    using (StreamWriter writer = newItem.AppendText())
+                    {
+                        writer.Write(value.ToString());
+                        writer.Flush();
+                        writer.Dispose();
+                    }
+                }
             }
 
         }
