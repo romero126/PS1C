@@ -174,7 +174,6 @@ namespace PS1C
             return new StreamContentReaderDynamicParameters();
 		}
 
-
         /// <summary>
         /// Creates an instance of the FileSystemContentStream class, opens
         /// the specified file for writing, and returns the IContentReader interface
@@ -300,7 +299,7 @@ namespace PS1C
 
             StreamContentReaderWriter stream = null;
             path = NormalizePath(path);
-            ZipFileItemInfo archiveFile = new ZipFileItemInfo(ZipFileDriveInfo, path, true);
+            ZipFileItemInfo archiveFile = new ZipFileItemInfo(ZipFileDriveInfo, path, false);
             archiveFile.ClearContent();
 
 		}
