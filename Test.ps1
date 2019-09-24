@@ -13,9 +13,9 @@
 #Invoke-Pester Tests\Remove-Item.Tests.ps1
 
 
-#Invoke-Pester Tests\*Content.Tests.ps1
+Invoke-Pester Tests\*Content.Tests.ps1
 #Invoke-Pester Tests\Clear-Content.Tests.ps1
-Invoke-Pester Tests\Get-Content.Tests.ps1
+#Invoke-Pester Tests\Get-Content.Tests.ps1
 #Invoke-Pester Tests\Set-Content.Tests.ps1
 
 
