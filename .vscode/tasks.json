@@ -13,7 +13,28 @@
             }
         },
         {
-            "label": "Launch File",
+            "label": "Test",
+            "type": "shell",
+            "command": "C:\\Program Files\\PowerShell\\7-preview\\pwsh.exe",
+            "args": [
+                "-Command '. .\\test.ps1 '"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Debug",
+            "type": "shell",
+            "command": ".\\Debug.ps1",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Launch File ${file}",
             "type": "shell",
             "command": "C:\\Program Files\\PowerShell\\7-preview\\pwsh.exe",
             "args": [
@@ -23,6 +44,31 @@
                 "kind": "build",
                 "isDefault": true
             }
-        }
+        },
+        {
+            "label": "Launch File '${file}' as New Window",
+            "type": "shell",
+            "command": "Start-Process",
+            "args": [
+                "C:\\Program Files\\PowerShell\\7-preview\\pwsh.exe",
+                "-i -NoExit -Command . ${file}"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Launch Scratch file",
+            "type": "shell",
+            "command": "C:\\Program Files\\PowerShell\\7-preview\\pwsh.exe",
+            "args": [
+                "-Command '. .\\Scratch.ps1'"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
     ]
 }

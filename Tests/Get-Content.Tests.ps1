@@ -309,7 +309,7 @@ baz
 
     It "Should return no content when an empty path is used with -Raw switch" {
         Set-ItResult -Inconclusive -Because "TODO: Get-ChildItem is failing due to not implimented yet"
-        #Get-ChildItem $TestDrive -Filter "*.raw" | Get-Content -Raw | Should -BeNullOrEmpty
+        Get-ChildItem $TestDrive -Filter "*.raw" | Get-Content -Raw | Should -BeNullOrEmpty
     }
     
     It "Should return no content when -TotalCount value is 0" {

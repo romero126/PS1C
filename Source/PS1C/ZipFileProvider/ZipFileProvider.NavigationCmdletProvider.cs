@@ -45,8 +45,6 @@ namespace PS1C
 		{
             path = NormalizePath(path);
             
-
-            
             if ( String.IsNullOrEmpty(path) )
             {
                 return true;

@@ -521,7 +521,7 @@ namespace PS1C
 
                     path = path.TrimStart(Path.AltDirectorySeparatorChar);
                     
-                    Console.WriteLine($"GetPathItems '{path}'");
+                    //Console.WriteLine($"GetPathItems '{path}'");
                     // Only the Root directory is looked at for this scenario. 
                     List<ZipFileItemInfo> fileInfoItems = ZipFileDriveInfo.GetItem(path, true, true).ToList();
 
@@ -1083,12 +1083,8 @@ namespace PS1C
             }
 
             path = NormalizePath(path);
-            if (ItemExists(path))
-            {
-                return false;
-            }
 
-            return true;
+            return IsItemContainer(path) && IsItemContainerContainsItems(path);
         }
 
         #endregion HasChildItems

@@ -90,6 +90,6 @@ dotnet build .\Source\PS1C\ -v q | Select-String "Error" | Select -unique | Writ
 $PSPath = "C:\Program Files\PowerShell\7-preview\pwsh.exe"
 
 #$PSPath = "C:\Program Files\PowerShell\6\pwsh.exe"
-& $PSPath -Command ". .\test.ps1"
+#& $PSPath -Command ". .\test.ps1"
 
 #Start-Process $PSPath -ArgumentList { -NoExit -Command ". { .\test.ps1 }" } -Wait

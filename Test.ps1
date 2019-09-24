@@ -11,9 +11,13 @@
 #Invoke-Pester Tests\Get-Item.Tests.ps1
 #Invoke-Pester Tests\New-Item.Tests.ps1
 #Invoke-Pester Tests\Remove-Item.Tests.ps1
-Invoke-Pester .\Tests\Clear-Content.Tests.ps1
+
+
+#Invoke-Pester Tests\*Content.Tests.ps1
+#Invoke-Pester Tests\Clear-Content.Tests.ps1
 Invoke-Pester Tests\Get-Content.Tests.ps1
-Invoke-Pester Tests\Set-Content.Tests.ps1
+#Invoke-Pester Tests\Set-Content.Tests.ps1
+
 
 #Write-Host "Internal Tests" -ForegroundColor Cyan
 #Invoke-Pester Tests\PS1C.Example.Tests.ps1
