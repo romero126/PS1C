@@ -18,20 +18,25 @@ namespace Microsoft.PowerShell.Commands
 		}
 		private Dictionary<string, System.IO.Stream> _streamsInUse;
 
+        private FileSystemWatcher _fileWatcher;
+        private int _fileWatcherLock = 0;
+
+        private List<ZipFileItemInfo> _entryCache;
+
 		//internal bool IsStreamInUse()
 		//internal void OpenStream()
 		//internal void CloseStream()
 		
 		//internal Stream PullStream() // Note this should not be used
 
-		public List<string> _zipArchiveEntries = new List<string>();
+		public List<string> _lockedEntries = new List<string>();
 		public ZipArchive LockArchive(string entry)
 		{
-			if (_zipArchiveEntries.Contains(entry))
+			if (_lockedEntries.Contains(entry))
 			{
 				throw new Exception("Cannot open file it is already open in another process");
 			}
-			_zipArchiveEntries.Add(entry);
+			_lockedEntries.Add(entry);
 			
 			if (Archive == null)
 			{
@@ -43,20 +48,33 @@ namespace Microsoft.PowerShell.Commands
 
 		public void UnlockArchive(string entry)
 		{
-			if (!_zipArchiveEntries.Contains(entry))
+            UnlockArchive(entry, true);
+		}
+		public void UnlockArchive(string entry, bool updateCache)
+		{
+			if (!_lockedEntries.Contains(entry))
 			{
 				throw new Exception("Cannot unlock stream it doesnt exist");
 			}
 
-			_zipArchiveEntries.Remove(entry);
+            //if (updateCache)
+            //{
+            //    _entryCache = null;
+            //}
 
-			if (_zipArchiveEntries.Count == 0)
+			_lockedEntries.Remove(entry);
+
+			if (_lockedEntries.Count == 0)
 			{
+                Console.WriteLine($"Unlocking Archive {entry}");
+
 				Archive.Dispose();
+
 				Archive = null;
 				GC.Collect();
 			}
 		}
+
 		internal bool IsStreamInUse()
 		{
 			if (Archive != null)
@@ -67,7 +85,7 @@ namespace Microsoft.PowerShell.Commands
 		}
 		public int ActiveHandles {
 			get {
-				return _zipArchiveEntries.Count;
+				return _lockedEntries.Count;
 			}
 		}
 
@@ -78,19 +96,74 @@ namespace Microsoft.PowerShell.Commands
 	    /// <param name="driveInfo">Drive defined by this provider</param>
         public ZipFilePSDriveInfo(PSDriveInfo driveInfo) : base(driveInfo)
 		{
-			Archive = ZipFile.Open(driveInfo.Root, ZipArchiveMode.Update);
+            UpdateCache();
+			//Archive = ZipFile.Open(driveInfo.Root, ZipArchiveMode.Update);
+            //_fileWatcher = new FileSystemWatcher();
+            //Console.WriteLine($"DriveInfo: {driveInfo.Root}");
+            ////_fileWatcher.Path = driveInfo.Root;
+            //_fileWatcher.Path = Path.GetDirectoryName(driveInfo.Root);
+            //_fileWatcher.Filter = Path.GetFileName(driveInfo.Root)+"*";
+            //_fileWatcher.NotifyFilter = NotifyFilters.LastWrite; // | NotifyFilters.Size;
+            //
+            //_fileWatcher.Changed += FileWatcher_Changed;
+            //_fileWatcher.EnableRaisingEvents = true;
 		}
 		
-		public IEnumerable<ZipFileItemInfo> GetItem()
-        {
-            ZipArchive zipArchive = LockArchive(ZipFileProviderStrings.DriveGetChildItems);
 
-            foreach (ZipArchiveEntry zipArchiveEntry in zipArchive.Entries)
-            {
-                yield return new ZipFileItemInfo(zipArchiveEntry, this);
+        #region ItemCache
+        protected private void FileWatcher_Changed(object sender, FileSystemEventArgs e)
+        {
+            if (_fileWatcherLock < 1) {
+                Console.WriteLine("W>L");
+                _fileWatcherLock += 1;
+                return;
             }
 
-            UnlockArchive(ZipFileProviderStrings.DriveGetChildItems);
+            FileSystemWatcher f = sender as FileSystemWatcher;
+            Console.WriteLine($"W>U {e.ChangeType} {e.Name}");
+            _fileWatcherLock = 0;
+            UpdateCache();
+        }
+        /// <summary>
+        /// Updates the cached entries.
+        /// </summary>
+        protected private void UpdateCache()
+        {
+            try
+            {
+                _entryCache = new List<ZipFileItemInfo>();
+                ZipArchive zipArchive = LockArchive(ZipFileProviderStrings.DriveGetChildItems);
+
+                foreach (ZipArchiveEntry zipArchiveEntry in zipArchive.Entries)
+                {
+                    _entryCache.Add( new ZipFileItemInfo(zipArchiveEntry, this) );
+                }
+            }
+            catch(Exception e)
+            {
+                throw e;
+            }
+            finally
+            {
+                UnlockArchive(ZipFileProviderStrings.DriveGetChildItems);
+            }
+        }
+
+        #endregion ItemCache
+
+        #region ItemHandler
+
+		public IEnumerable<ZipFileItemInfo> GetItem()
+        {
+            //if (_entryCache == null)
+            //{
+            //    UpdateCache();
+            //}
+            UpdateCache();
+            foreach (ZipFileItemInfo item in _entryCache)
+            {
+                yield return item;
+            }
         }
 
         public IEnumerable<ZipFileItemInfo> GetItem(string path)
@@ -163,7 +236,7 @@ namespace Microsoft.PowerShell.Commands
 			return ItemExists(path, true);
 		}
 
-
+        #endregion ItemHandler
 		public void buildFolderPaths()
         {
 
