@@ -899,10 +899,6 @@ namespace PS1C
                 } // ShouldProcess
             }
 
-
-
- 
-
 		}
 
         // Todo: Double check this whole region
