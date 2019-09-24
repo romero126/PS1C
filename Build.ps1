@@ -45,19 +45,3 @@ Start-ResGen
 Write-Host ""
 Write-Host "Building"
 dotnet build .\Source\PS1C\ -v q | Select-String "Error" | Select -unique | Write-Host -ForegroundColor Red
-
-return
-
-
-#pwsh.exe -Command ". { .\Test.ps1 }"
-
-#Start-Process pwsh.exe -ArgumentList { -NoExit -Command ". { .\test.ps1 }" -i }
-
-#$PSPath = "pwsh.exe"
-#$PSPath = "C:\Program Files\PowerShell\6\pwsh.exe"
-$PSPath = "C:\Program Files\PowerShell\7-preview\pwsh.exe"
-
-#$PSPath = "C:\Program Files\PowerShell\6\pwsh.exe"
-#& $PSPath -Command ". .\test.ps1"
-
-#Start-Process $PSPath -ArgumentList { -NoExit -Command ". { .\test.ps1 }" } -Wait
