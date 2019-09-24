@@ -267,7 +267,7 @@ namespace PS1C
                 }
                 else
                 {
-                    string error = StringUtil.Format(FileSystemProviderStrings.ItemNotFound, path);
+                    string error = StringUtil.Format(ZipFileProviderStrings.ItemNotFound, path);
                     Exception e = new IOException(error);
                     WriteError(new ErrorRecord(
                         e,
@@ -308,9 +308,9 @@ namespace PS1C
 
             path = NormalizePath(path);
 
-            string action = FileSystemProviderStrings.InvokeItemAction;
+            string action = ZipFileProviderStrings.InvokeItemAction;
 
-            string resource = StringUtil.Format(FileSystemProviderStrings.InvokeItemResourceFileTemplate, path);
+            string resource = StringUtil.Format(ZipFileProviderStrings.InvokeItemResourceFileTemplate, path);
 
             if (ShouldProcess(resource, action))
             {
@@ -575,7 +575,7 @@ namespace PS1C
                 Console.WriteLine("Please help me out. Submit an issue with what you did in order to get this to trigger");
                 Console.WriteLine("https://github.com/romero126/PS1C");
 
-                String error = StringUtil.Format(FileSystemProviderStrings.ItemDoesNotExist, path);
+                String error = StringUtil.Format(ZipFileProviderStrings.ItemDoesNotExist, path);
                 Exception e = new IOException(error);
                 WriteError(new ErrorRecord(
                     e,
@@ -644,13 +644,13 @@ namespace PS1C
             //If a path is specified for the newName then we flag that as an error.
             // if (String.Compare(Path.GetFileName(newName), newName, StringComparison.OrdinalIgnoreCase) != 0)
             // {
-            //     throw PSTraceSource.NewArgumentException("newName", FileSystemProviderStrings.RenameError);
+            //     throw PSTraceSource.NewArgumentException("newName", ZipFileProviderStrings.RenameError);
             // }
 
             // Check to see if the target specified exists. 
             if (ItemExists(newName))
             {
-                throw PSTraceSource.NewArgumentException("newName", FileSystemProviderStrings.RenameError);
+                throw PSTraceSource.NewArgumentException("newName", ZipFileProviderStrings.RenameError);
             }
             
             try
@@ -661,9 +661,9 @@ namespace PS1C
 
                 // Confirm the rename with the user
 
-                string action = FileSystemProviderStrings.RenameItemActionFile;
+                string action = ZipFileProviderStrings.RenameItemActionFile;
 
-                string resource = StringUtil.Format(FileSystemProviderStrings.RenameItemResourceFileTemplate, file.FullName, newName);
+                string resource = StringUtil.Format(ZipFileProviderStrings.RenameItemResourceFileTemplate, file.FullName, newName);
 
 
                 if (ShouldProcess(resource, action))
@@ -1002,7 +1002,7 @@ namespace PS1C
                 {
                     // File ZipFile Open and ZipFileItem Open throws the same errors, need to validate
                     // ZipFileItem existance.
-                    if (ioException.Message != StringUtil.Format(FileSystemProviderStrings.ItemNotFound, path))
+                    if (ioException.Message != StringUtil.Format(ZipFileProviderStrings.ItemNotFound, path))
                     {
                         throw ioException;
                     }
@@ -1181,12 +1181,12 @@ namespace PS1C
                 }
 
                 // Confirm the move with the user
-                string action = FileSystemProviderStrings.CopyItemActionFile;
+                string action = ZipFileProviderStrings.CopyItemActionFile;
                 foreach (ZipFileItemInfo file in files)
                 {
                     string driveName = (file.Drive.Name + Path.VolumeSeparatorChar + Path.DirectorySeparatorChar);
 
-                    string resource = StringUtil.Format(FileSystemProviderStrings.CopyItemResourceFileTemplate, file.FullName, destinationPath);
+                    string resource = StringUtil.Format(ZipFileProviderStrings.CopyItemResourceFileTemplate, file.FullName, destinationPath);
                     if (ShouldProcess(resource, action))
                     {
                         // If pathIsDirectory

@@ -189,7 +189,7 @@ namespace Microsoft.PowerShell.Commands
             path = path.Replace(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
 
             try {
-                ZipArchive zipArchive = drive.LockArchive(ZipFileProviderStrings.DriveGetItem);
+                ZipArchive zipArchive = drive.LockArchive(ZipFileProviderStrings.GetChildItemsAction);
                 ArchiveEntry = zipArchive.GetEntry(path);
 
                 if (ArchiveEntry == null)
@@ -202,14 +202,13 @@ namespace Microsoft.PowerShell.Commands
 
                         if (ArchiveEntry == null)
                         {
-                            throw new IOException(FileSystemProviderStrings.PermissionError);
+                            throw new IOException(ZipFileProviderStrings.PermissionError);
                         }
-
                     }
                     else
                     {
-                        string error = StringUtil.Format(FileSystemProviderStrings.ItemNotFound, path);
-                        throw new IOException(error);
+                        string error = StringUtil.Format(ZipFileProviderStrings.ItemNotFound, path);
+                        throw new FileNotFoundException(error);
                     }
 
                 }
@@ -219,7 +218,7 @@ namespace Microsoft.PowerShell.Commands
                 throw e;
             }
             finally {
-                drive.UnlockArchive(ZipFileProviderStrings.DriveGetItem);
+                drive.UnlockArchive(ZipFileProviderStrings.GetChildItemsAction);
             }
 
         }
