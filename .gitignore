@@ -1,6 +1,7 @@
 .vscode/PublishToGallery.ps1
 asdf.ps1
 Issue Request.md
-Source/PS1C/bin
-Source/PS1C/obj
+Source/*/bin
+Source/*/obj
+Source/*/gen
 Module/
