@@ -1,43 +1,3 @@
-
-
-<#
-#Compile RESX
-$Files = Get-ChildItem -path $PSSCriptRoot\Source\*.resx -Recurse
-
-foreach ($File in $Files)
-{
-    $File
-    [xml]$Resx = Get-Content $File
-
-    $OutString = @"
-using System;
-using System.Collections.Generic;
-
-namespace PS1C
-{
-    public static class $($File.BaseName)
-    {
-$(
-        foreach ($Element in $Resx.Root.Data)
-        {
-            "`n       internal static string {0,-100} =   `"{1}`";" -f $Element.Name, $Element.Value.Replace('"', '\"j')
-        }
-)
-
-    }
-}
-
-"@
-
-
-    #$OutString
-    $OutFile = Join-Path $File.Directory "$($File.BaseName).cs"
-    $OutString | Out-File $OutFile
-}
-
-
-#>
-
 function Pull-File
 {
     param(
@@ -77,9 +37,17 @@ function Pull-File
 #Pull-File -URI "System.Management.Automation/engine/Attributes.cs"
 #Pull-File -uri "System.Management.Automation/engine/Utils.cs"
 
+
+Import-Module $PSScriptRoot\build.psm1
+
+Start-ResGen
+
 Write-Host ""
 Write-Host "Building"
 dotnet build .\Source\PS1C\ -v q | Select-String "Error" | Select -unique | Write-Host -ForegroundColor Red
+
+return
+
 
 #pwsh.exe -Command ". { .\Test.ps1 }"
 
