@@ -10,11 +10,13 @@ Content Cmdlets
 
 Item Cmdlets
 	[?] Clear-Item
-	[?] Copy-Item
+	[?] Copy-Item		# Todo
 	[X] Get-Item
 	[X] Invoke-Item
-	[?] Move-Item
+	[?] Move-Item		# Todo
 	[X] New-Item
+		[X] Directory
+		[X] File
 	[X] Remove-Item
 	[X] Rename-Item
 	[?] Set-Item
@@ -34,7 +36,6 @@ Location cmdlets
 	[X] Pop-Location
 	[X] Push-Location
 	[X] Set-Location
-	[?] Path cmdlets
 	[X] Join-Path
 	[X] Convert-Path
 	[X] Split-Path
@@ -60,3 +61,7 @@ Request for Information:
 	Example: Invoke / .\ScriptName.ps1
 
 
+Request for future:
+Open-Zip
+Close-Zip
+Get-Zip
