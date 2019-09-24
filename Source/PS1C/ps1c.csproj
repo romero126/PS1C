@@ -13,7 +13,7 @@
     <PackageReference Include="System.Security.Permissions" Version="4.6.0-preview8.19405.3" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include=".\Resources\**">
+    <Content Include=".\Resources\**" Exclude=".\Resources\*.resx">
       <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
