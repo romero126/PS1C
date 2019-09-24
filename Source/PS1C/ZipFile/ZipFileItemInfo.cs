@@ -247,10 +247,16 @@ namespace Microsoft.PowerShell.Commands
         
         public void Delete()
         {
-            using (ZipArchive zipArchive = ZipFile.Open(Drive.Root, ZipArchiveMode.Update))
-            {
+            try {
+                ZipArchive zipArchive = Drive.LockArchive(ArchiveEntry.FullName);
                 ZipArchiveEntry zipArchiveEntry = zipArchive.GetEntry(ArchiveEntry.FullName);
                 zipArchiveEntry.Delete();
+            }
+            catch {
+
+            }
+            finally {
+                Drive.UnlockArchive(ArchiveEntry.FullName);
             }
 
         }
