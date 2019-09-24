@@ -40,25 +40,24 @@ function Get-NonExistantFunctionName
 }
 
 Describe "Clear-Content cmdlet tests" -Tags "CI" {
-  BeforeAll {
-    Import-Module .\Source\PS1C\bin\Debug\netcoreapp3.0\ps1c.psd1 -Force
-    New-PSDrive -Name TestDrive -PSProvider ZipFile -root "$PSScriptRoot\ZipFile.Zip" -ErrorAction "Stop"
+    BeforeAll {
+        Import-Module .\Source\PS1C\bin\Debug\netcoreapp3.0\ps1c.psd1 -Force
+        New-PSDrive -Name TestDrive -PSProvider ZipFile -root "$PSScriptRoot\ZipFile.Zip" -ErrorAction "Stop"
 
-    $file1 = "file1.txt"
-    $file2 = "file2.txt"
-    $file3 = "file3.txt"
-    $content1 = "This is content"
-    $content2 = "This is content for alternate stream tests"
+        $file1 = "file1.txt"
+        $file2 = "file2.txt"
+        $file3 = "file3.txt"
+        $content1 = "This is content"
+        $content2 = "This is content for alternate stream tests"
 
-    #New-Item -Path "TestDrive:\$file1" -ItemType File
-    #New-Item -Path "TestDrive:\$file2" -ItemType File -Value $content1
-    #New-Item -Path "TestDrive:\$file3" -ItemType File -Value $content2
-    #Setup -File "$file1"
-    #Setup -File "$file2" -Content $content1
-    #Setup -File "$file3" -Content $content2
-    $streamContent = "content for alternate stream"
-    $streamName = "altStream1"
-  }
+
+        New-Item -Path "TestDrive:\$file1" -ItemType File -Force
+        New-Item -Path "TestDrive:\$file2" -ItemType File -Value $content1 -Force
+        New-Item -Path "TestDrive:\$file3" -ItemType File -Value $content2 -Force
+
+        $streamContent = "content for alternate stream"
+        $streamName = "altStream1"
+    }
 
     Context "Clear-Content should actually clear content" {
         It "should clear-Content of TestDrive:\$file1" {
@@ -111,6 +110,7 @@ Describe "Clear-Content cmdlet tests" -Tags "CI" {
             $badFile = "TestDrive:/badfilename.txt"
             { Clear-Content -Path $badFile -ErrorAction Stop } |
                 Should -Throw -ErrorId "PathNotFound,Microsoft.PowerShell.Commands.ClearContentCommand"
+
         }
     }
 }
