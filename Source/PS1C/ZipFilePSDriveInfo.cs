@@ -48,7 +48,7 @@ namespace Microsoft.PowerShell.Commands
 
 		public void UnlockArchive(string entry)
 		{
-            UnlockArchive(entry, true);
+            UnlockArchive(entry, false);
 		}
 		public void UnlockArchive(string entry, bool updateCache)
 		{
@@ -57,17 +57,15 @@ namespace Microsoft.PowerShell.Commands
 				throw new Exception("Cannot unlock stream it doesnt exist");
 			}
 
-            //if (updateCache)
-            //{
-            //    _entryCache = null;
-            //}
+            if (!updateCache)
+            {
+                _entryCache = null;
+            }
 
 			_lockedEntries.Remove(entry);
 
 			if (_lockedEntries.Count == 0)
 			{
-                Console.WriteLine($"Unlocking Archive {entry}");
-
 				Archive.Dispose();
 
 				Archive = null;
@@ -97,33 +95,11 @@ namespace Microsoft.PowerShell.Commands
         public ZipFilePSDriveInfo(PSDriveInfo driveInfo) : base(driveInfo)
 		{
             UpdateCache();
-			//Archive = ZipFile.Open(driveInfo.Root, ZipArchiveMode.Update);
-            //_fileWatcher = new FileSystemWatcher();
-            //Console.WriteLine($"DriveInfo: {driveInfo.Root}");
-            ////_fileWatcher.Path = driveInfo.Root;
-            //_fileWatcher.Path = Path.GetDirectoryName(driveInfo.Root);
-            //_fileWatcher.Filter = Path.GetFileName(driveInfo.Root)+"*";
-            //_fileWatcher.NotifyFilter = NotifyFilters.LastWrite; // | NotifyFilters.Size;
-            //
-            //_fileWatcher.Changed += FileWatcher_Changed;
-            //_fileWatcher.EnableRaisingEvents = true;
 		}
 		
 
         #region ItemCache
-        protected private void FileWatcher_Changed(object sender, FileSystemEventArgs e)
-        {
-            if (_fileWatcherLock < 1) {
-                Console.WriteLine("W>L");
-                _fileWatcherLock += 1;
-                return;
-            }
 
-            FileSystemWatcher f = sender as FileSystemWatcher;
-            Console.WriteLine($"W>U {e.ChangeType} {e.Name}");
-            _fileWatcherLock = 0;
-            UpdateCache();
-        }
         /// <summary>
         /// Updates the cached entries.
         /// </summary>
@@ -132,7 +108,7 @@ namespace Microsoft.PowerShell.Commands
             try
             {
                 _entryCache = new List<ZipFileItemInfo>();
-                ZipArchive zipArchive = LockArchive(ZipFileProviderStrings.DriveGetChildItems);
+                ZipArchive zipArchive = LockArchive(ZipFileProviderStrings.GetChildItemsAction);
 
                 foreach (ZipArchiveEntry zipArchiveEntry in zipArchive.Entries)
                 {
@@ -145,7 +121,7 @@ namespace Microsoft.PowerShell.Commands
             }
             finally
             {
-                UnlockArchive(ZipFileProviderStrings.DriveGetChildItems);
+                UnlockArchive(ZipFileProviderStrings.GetChildItemsAction, true);
             }
         }
 
@@ -155,11 +131,11 @@ namespace Microsoft.PowerShell.Commands
 
 		public IEnumerable<ZipFileItemInfo> GetItem()
         {
-            //if (_entryCache == null)
-            //{
-            //    UpdateCache();
-            //}
-            UpdateCache();
+            if (_entryCache == null)
+            {
+                UpdateCache();
+            }
+            //UpdateCache();
             foreach (ZipFileItemInfo item in _entryCache)
             {
                 yield return item;
@@ -241,7 +217,7 @@ namespace Microsoft.PowerShell.Commands
         {
 
             try {
-                ZipArchive zipArchive = LockArchive(ZipFileProviderStrings.DriveBuildFolderPaths);
+                ZipArchive zipArchive = LockArchive(ZipFileProviderStrings.GetChildItemsAction);
 
                 // Generate a list of items to create
                 List<string> dirList = new List<string>();
@@ -285,7 +261,7 @@ namespace Microsoft.PowerShell.Commands
                 throw e;
             }
             finally {
-                UnlockArchive(ZipFileProviderStrings.DriveBuildFolderPaths);
+                UnlockArchive(ZipFileProviderStrings.GetChildItemsAction);
             }
         }
 
@@ -297,6 +273,7 @@ namespace Microsoft.PowerShell.Commands
                 yield return path.Substring(0, i+1);
             }
         }
+        
     }
 
 }
