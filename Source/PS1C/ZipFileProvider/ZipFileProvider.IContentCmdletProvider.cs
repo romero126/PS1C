@@ -83,7 +83,7 @@ namespace PS1C
 
                     if (usingByteEncoding && streamTypeSpecified)
                     {
-                        WriteWarning(FileSystemProviderStrings.EncodingNotUsed);
+                        WriteWarning(ZipFileProviderStrings.EncodingNotUsed);
                     }
 
                     if (streamTypeSpecified)
@@ -106,7 +106,7 @@ namespace PS1C
                     if (usingByteEncoding)
                     {
                         Exception e =
-                            new ArgumentException(FileSystemProviderStrings.DelimiterError, "delimiter");
+                            new ArgumentException(ZipFileProviderStrings.DelimiterError, "delimiter");
                         WriteError(new ErrorRecord(
                             e,
                             "GetContentReaderArgumentError",
@@ -220,7 +220,7 @@ namespace PS1C
 
                     if (usingByteEncoding && streamTypeSpecified)
                     {
-                        WriteWarning(FileSystemProviderStrings.EncodingNotUsed);
+                        WriteWarning(ZipFileProviderStrings.EncodingNotUsed);
                     }
 
                     if (streamTypeSpecified)
@@ -287,21 +287,77 @@ namespace PS1C
 			return new StreamContentWriterDynamicParameters();
 		}
 
+
+        /// <summary>
+        /// Clears the content of the specified file.
+        /// </summary>
+        ///
+        /// <param name="path">
+        /// The path to the file of which to clear the contents.
+        /// </param>
+        ///
+        /// <exception cref="System.ArgumentException">
+        ///     path is null or empty.
+        /// </exception>
 		public void ClearContent(string path)
 		{
 
-            // Validate Parent Directory does not exist
-            if (!IsItemContainer(Path.GetDirectoryName(path)))
+            if (String.IsNullOrEmpty(path))
             {
-                Console.WriteLine(path);
-                throw new Exception("Parent directory does not exist");
+                throw PSTraceSource.NewArgumentException("path");
             }
 
-            StreamContentReaderWriter stream = null;
             path = NormalizePath(path);
-            ZipFileItemInfo archiveFile = new ZipFileItemInfo(ZipFileDriveInfo, path, false);
-            archiveFile.ClearContent();
 
+            try
+            {
+                bool clearStream = false;
+                string streamName = null;
+                FileSystemClearContentDynamicParameters dynamicParameters = null;
+                FileSystemContentWriterDynamicParameters writerDynamicParameters = null;
+
+                // We get called during:
+                //     - Clear-Content
+                //     - Set-Content, in the phase that clears the path first.
+                if (DynamicParameters != null)
+                {
+                    dynamicParameters = DynamicParameters as FileSystemClearContentDynamicParameters;
+                    writerDynamicParameters = DynamicParameters as FileSystemContentWriterDynamicParameters;
+                }
+
+                string action = ZipFileProviderStrings.ClearContentActionFile;
+                string resource = StringUtil.Format(ZipFileProviderStrings.ClearContentesourceTemplate, path);
+
+                if (!ShouldProcess(resource, action))
+                    return;
+
+                // Validate Parent Directory does not exist
+                if (!IsItemContainer(Path.GetDirectoryName(path)))
+                {
+                    throw new Exception("Parent directory does not exist");
+                }
+
+                path = NormalizePath(path);
+
+                ZipFileItemInfo archiveFile = new ZipFileItemInfo(ZipFileDriveInfo, path, Force.ToBool());
+                archiveFile.ClearContent();
+
+                // For filesystem once content is cleared
+                WriteItemObject("", path, false);
+            }
+            catch (ArgumentException argException)
+            {
+                WriteError(new ErrorRecord(argException, "ClearContentArgumentError", ErrorCategory.InvalidArgument, path));
+            }
+            catch (FileNotFoundException fileNotFoundException)
+            {
+                WriteError(new ErrorRecord(fileNotFoundException, "PathNotFound", ErrorCategory.ObjectNotFound, path));
+            }
+            catch (IOException ioException)
+            {
+                //IOException contains specific message about the error occured and so no need for errordetails.
+                WriteError(new ErrorRecord(ioException, "ClearContentIOError", ErrorCategory.WriteError, path));
+            }
 		}
 
         public object ClearContentDynamicParameters(string path)
@@ -320,20 +376,20 @@ namespace PS1C
             {
                 if (this.Context_MyInvocation.BoundParameters.ContainsKey("TotalCount"))
                 {
-                    string message = StringUtil.Format(FileSystemProviderStrings.NoFirstLastWaitForRaw, "Raw", "TotalCount");
+                    string message = StringUtil.Format(ZipFileProviderStrings.NoFirstLastWaitForRaw, "Raw", "TotalCount");
                     throw new PSInvalidOperationException(message);
                 }
             
 
                 if (this.Context_MyInvocation.BoundParameters.ContainsKey("Tail"))
                 {
-                    string message = StringUtil.Format(FileSystemProviderStrings.NoFirstLastWaitForRaw, "Raw", "Tail");
+                    string message = StringUtil.Format(ZipFileProviderStrings.NoFirstLastWaitForRaw, "Raw", "Tail");
                     throw new PSInvalidOperationException(message);
                 }
 
                 if (this.Context_MyInvocation.BoundParameters.ContainsKey("Delimiter"))
                 {
-                    string message = StringUtil.Format(FileSystemProviderStrings.NoFirstLastWaitForRaw, "Raw", "Delimiter");
+                    string message = StringUtil.Format(ZipFileProviderStrings.NoFirstLastWaitForRaw, "Raw", "Delimiter");
                     throw new PSInvalidOperationException(message);
                 }
             }
