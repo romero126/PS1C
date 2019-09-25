@@ -6,3 +6,5 @@ Source/*/obj
 Source/*/gen
 Module/
 *.Ignore.*
+Tests/ZipFile.zip
+*.Ignore
