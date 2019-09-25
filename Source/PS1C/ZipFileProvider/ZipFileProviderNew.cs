@@ -89,6 +89,12 @@ namespace PS1C
                 }
             }
 
+            // Null or empty should return null or empty
+            if (String.IsNullOrEmpty(path))
+            {
+                return path;
+            }
+
             if (path.IndexOfAny(Path.GetInvalidPathChars()) != -1)
             {
                 PSTraceSource.NewArgumentException(ZipFileProviderStrings.PathContainsInvalidCharacters);
