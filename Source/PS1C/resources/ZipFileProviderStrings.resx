@@ -123,7 +123,15 @@
   <data name="PathContainsInvalidCharacters" xml:space="preserve">
     <value>Path contains invalid characters.</value>
   </data>
-
+  <data name="NewItemActionFile" xml:space="preserve">
+    <value>Create File</value>
+  </data>
+  <data name="NewItemActionDirectory" xml:space="preserve">
+    <value>Create Directory</value>
+  </data>
+  <data name="NewItemActionTemplate" xml:space="preserve">
+    <value>Destination: {0}</value>
+  </data>
   <data name="ClearContentActionFile" xml:space="preserve">
     <value>Clear Content</value>
   </data>
