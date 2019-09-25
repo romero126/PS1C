@@ -8,3 +8,5 @@ Module/
 *.Ignore.*
 Tests/ZipFile.zip
 *.Ignore
+Scratch.ps1
+Other.ps1
