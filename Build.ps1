@@ -16,8 +16,6 @@ function Pull-File
     Write-Host "Downloading Content", $URI -ForeGroundColor Cyan
 
     Invoke-WebRequest -uri $FullURI -UseBasicParsing | % Content | Out-File -FilePath $ExportPath
-
-
 }
 
 #Pulled Files
