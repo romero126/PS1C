@@ -5,3 +5,4 @@ Source/*/bin
 Source/*/obj
 Source/*/gen
 Module/
+*.Ignore.*
