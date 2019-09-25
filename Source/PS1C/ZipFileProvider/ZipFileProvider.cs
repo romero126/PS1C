@@ -757,48 +757,99 @@ namespace PS1C
 
             path = NormalizePath(path);
 
-            if (Force)
-            {
-                ZipFileItemInfo NewFile = new ZipFileItemInfo(ZipFileDriveInfo, path, true);
-                ZipFileDriveInfo.buildFolderPaths();
-            }
-
-            // Validate Parent Directory does not exist
-            if (!IsItemContainer(Path.GetDirectoryName(path)) && !Force)
-            {
-                throw new Exception("Parent directory does not exist");
-            }
-
-            if (ItemExists(path) && !Force)
-            {
-                throw new Exception("File Exists");
-            }
-
-
-            if (itemType == ItemType.Directory)
-            {
-                if (!Path.EndsInDirectorySeparator(path))
+            try {
+                if (Force)
                 {
-                    path += Path.AltDirectorySeparatorChar;
+                    ZipFileItemInfo NewFile = new ZipFileItemInfo(ZipFileDriveInfo, path, true);
+                    ZipFileDriveInfo.buildFolderPaths();
+                }
+            
+                // Validate Parent Directory does not exist
+                if (!IsItemContainer(Path.GetDirectoryName(path)) && !Force)
+                {
+                    throw new Exception("Parent directory does not exist");
+                }
+                
+                if (IsItemContainer(path) && itemType == ItemType.File)
+                {
+                    throw new UnauthorizedAccessException("No Access");
                 }
 
-                ZipFileItemInfo newItem = new ZipFileItemInfo(ZipFileDriveInfo, path, true);
-
-            }
-            else if (itemType == ItemType.File)
-            {
-                ZipFileItemInfo newItem = new ZipFileItemInfo(ZipFileDriveInfo, path, true);
-                newItem = new ZipFileItemInfo(ZipFileDriveInfo, path, true);
-                if (value != null)
+                if (ItemExists(path) && !Force)
                 {
-                    using (StreamWriter writer = newItem.AppendText())
+                    throw new Exception("File Exists");
+                }
+
+                if (itemType == ItemType.Directory)
+                {
+                    string action = ZipFileProviderStrings.NewItemActionDirectory;
+
+                    string resource = StringUtil.Format(ZipFileProviderStrings.NewItemActionTemplate, path);
+
+                    if (!ShouldProcess(resource, action))
                     {
-                        writer.Write(value.ToString());
-                        writer.Flush();
-                        writer.Dispose();
+                        return;
+                    }
+
+                    if (!Path.EndsInDirectorySeparator(path))
+                    {
+                        path += Path.AltDirectorySeparatorChar;
+                    }
+
+                    ZipFileItemInfo newItem = new ZipFileItemInfo(ZipFileDriveInfo, path, true);
+
+                }
+                else if (itemType == ItemType.File)
+                {
+                    string action = ZipFileProviderStrings.NewItemActionFile;
+
+                    string resource = StringUtil.Format(ZipFileProviderStrings.NewItemActionTemplate, path);
+
+                    if (!ShouldProcess(resource, action))
+                    {
+                        return;
+                    }
+
+                    ZipFileItemInfo newItem = new ZipFileItemInfo(ZipFileDriveInfo, path, true);
+                    newItem = new ZipFileItemInfo(ZipFileDriveInfo, path, true);
+                    if (value != null)
+                    {
+                        using (StreamWriter writer = newItem.AppendText())
+                        {
+                            writer.Write(value.ToString());
+                            writer.Flush();
+                            writer.Dispose();
+                        }
                     }
                 }
             }
+            catch(Exception exception) {
+                //rollback the directory creation if it was created.
+                // if (!pathExists)
+                // {
+                //     pathDirInfo.Delete();
+                // }
+
+                if ((exception is FileNotFoundException) ||
+                        (exception is DirectoryNotFoundException) ||
+                        (exception is UnauthorizedAccessException) ||
+                        (exception is System.Security.SecurityException) ||
+                        (exception is ArgumentException) ||
+                        (exception is PathTooLongException) ||
+                        (exception is NotSupportedException) ||
+                        (exception is ArgumentNullException) ||
+                        (exception is IOException))
+                {
+                    WriteError(new ErrorRecord(exception, "NewItemCreateIOError", ErrorCategory.WriteError, path));
+                }
+                else
+                    throw;
+            }
+
+
+
+
+
 
         }
 
