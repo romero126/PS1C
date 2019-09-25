@@ -3,7 +3,7 @@
 Describe "Get-Content" -Tags "CI" {
 
 
-    beforeall {
+    BeforeAll {
         
         Import-Module .\Source\PS1C\bin\Debug\netcoreapp3.0\ps1c.psd1 -Force
         New-PSDrive -Name PSProvider -PSProvider ZipFile -root "$PSScriptRoot\ZipFile.Zip" -ErrorAction "Stop"
