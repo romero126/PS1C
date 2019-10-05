@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 Describe "Set-Content cmdlet tests" -Tags "CI" {
     BeforeAll {
-        Import-Module .\Source\PS1C\bin\Debug\netcoreapp3.0\ps1c.psd1 -Force
+        Import-Module .\src\PS1C\bin\Debug\netcoreapp3.0\ps1c.psd1 -Force
         New-PSDrive -Name PSProvider -PSProvider ZipFile -root "$PSScriptRoot/ZipFile.Zip" -ErrorAction "Stop"
         $testdrive = "PSProvider:\"
 
@@ -73,17 +73,5 @@ Describe "Set-Content cmdlet tests" -Tags "CI" {
             $result[0]     | Should -BeExactly "hello"
             $result[1]     | Should -BeExactly "world"
         }
-    }
-}
-
-Describe "Set-Content should work for PSDrive with UNC path as root" -Tags @('CI', 'RequireAdminOnWindows') {
-    BeforeAll {
-        Import-Module .\Source\PS1C\bin\Debug\netcoreapp3.0\ps1c.dll
-        $TestDrive = "PSProvider:\"
-        $file1 = "file1.txt"
-        #create a random folder
-        $randomFolderName = "TestFolder_" + (Get-Random).ToString()
-        $randomFolderPath = Join-Path $testdrive $randomFolderName
-        $null = New-Item -Path $randomFolderPath -ItemType Directory -ErrorAction SilentlyContinue
     }
 }
