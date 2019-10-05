@@ -4,10 +4,10 @@ Describe "Add-Content cmdlet tests" -Tags "CI" {
 
     BeforeAll {
         Import-Module .\Source\PS1C\bin\Debug\netcoreapp3.0\ps1c.psd1 -Force
-        New-PSDrive -Name TestDrive -PSProvider ZipFile -root "$PSScriptRoot\ZipFile.Zip" -ErrorAction "Stop"
+        #New-PSDrive -Name TestDrive -PSProvider ZipFile -root "$PSScriptRoot/ZipFile.Zip" -ErrorAction "Stop"
         #Current tests run persistanence for zipfile.
-        Remove-Item TestDrive:\file*
-        Remove-Item TestDrive:\dynamic*
+        Remove-Item TestDrive:\file* -ErrorAction Continue
+        Remove-Item TestDrive:\dynamic* -ErrorAction Continue
 
         $file1 = "file1.txt"
         New-Item -Path "TestDrive:\$file1" -ItemType File -Force

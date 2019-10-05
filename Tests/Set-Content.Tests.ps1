@@ -3,13 +3,14 @@
 Describe "Set-Content cmdlet tests" -Tags "CI" {
     BeforeAll {
         Import-Module .\Source\PS1C\bin\Debug\netcoreapp3.0\ps1c.psd1 -Force
-        New-PSDrive -Name PSProvider -PSProvider ZipFile -root "$PSScriptRoot\ZipFile.Zip" -ErrorAction "Stop"
+        New-PSDrive -Name PSProvider -PSProvider ZipFile -root "$PSScriptRoot/ZipFile.Zip" -ErrorAction "Stop"
         $testdrive = "PSProvider:\"
 
         $file1 = "file1.txt"
         $filePath1 = Join-Path $testdrive $file1
-        # if the registry doesn't exist, don't run those tests
-        $skipRegistry = ! (Test-Path hklm:/)
+
+        try { New-Item PSProvider:\bfile.txt -Value "" -ErrorAction Continue }
+        catch {}
     }
 
     It "A warning should be emitted if both -AsByteStream and -Encoding are used together" {
@@ -45,27 +46,24 @@ Describe "Set-Content cmdlet tests" -Tags "CI" {
         It "should Set-Content to testdrive\dynamicfile.txt with dynamic parameters" {
             Set-Content -Path $testdrive\dynamicfile.txt -Value "ExpectedContent"
             $result = Get-Content -Path $testdrive\dynamicfile.txt
-            $result| Should -BeExactly "ExpectedContent"
+            $result | Should -BeExactly "ExpectedContent"
         }
         It "should return expected string from testdrive\dynamicfile.txt" {
             $result = Get-Content -Path $testdrive\dynamicfile.txt
             $result | Should -BeExactly "ExpectedContent"
         }
         It "should remove existing content from testdrive\$file1 when the -Value is `$null" {
-            $AsItWas=Get-Content $filePath1
-            $AsItWas |Should -BeExactly "ExpectedContent"
+            $AsItWas = Get-Content $filePath1
+            $AsItWas | Should -BeExactly "ExpectedContent"
             Set-Content -Path $filePath1 -Value $null -ErrorAction Stop
-            $AsItIs=Get-Content $filePath1
-            $AsItIs| Should -Not -Be $AsItWas
+            $AsItIs = Get-Content $filePath1
+            $AsItIs | Should -Not -Be $AsItWas
         }
         It "should throw 'ParameterArgumentValidationErrorNullNotAllowed' when -Path is `$null" {
             { Set-Content -Path $null -Value "ShouldNotWorkBecausePathIsNull" -ErrorAction Stop } | Should -Throw -ErrorId "ParameterArgumentValidationErrorNullNotAllowed,Microsoft.PowerShell.Commands.SetContentCommand"
         }
         It "should throw 'ParameterArgumentValidationErrorNullNotAllowed' when -Path is `$()" {
             { Set-Content -Path $() -Value "ShouldNotWorkBecausePathIsInvalid" -ErrorAction Stop } | Should -Throw -ErrorId "ParameterArgumentValidationErrorNullNotAllowed,Microsoft.PowerShell.Commands.SetContentCommand"
-        }
-        It "should throw 'PSNotSupportedException' when you Set-Content to an unsupported provider" -skip:$skipRegistry {
-            { Set-Content -Path HKLM:\\software\\microsoft -Value "ShouldNotWorkBecausePathIsUnsupported" -ErrorAction Stop } | Should -Throw -ErrorId "NotSupported,Microsoft.PowerShell.Commands.SetContentCommand"
         }
         #[BugId(BugDatabase.WindowsOutOfBandReleases, 9058182)]
         It "should be able to pass multiple [string]`$objects to Set-Content through the pipeline to output a dynamic Path file" {
