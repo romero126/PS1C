@@ -54,9 +54,7 @@
     # RequiredModules = @()
 
     # Assemblies that must be loaded prior to importing this module
-    #RequiredAssemblies = @(
-    #    "ps1c.dll"
-    #)
+    # RequiredAssemblies = @()
 
     # Script files (.ps1) that are run in the caller's environment prior to importing this module.
     # ScriptsToProcess = @()
@@ -70,7 +68,9 @@
     )
 
     # Modules to import as nested modules of the module specified in RootModule/ModuleToProcess
-    # NestedModules = @()
+    NestedModules = @(
+        "ps1c.dll"
+    )
 
     # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
     #FunctionsToExport  = '*'
@@ -88,7 +88,7 @@
     # DscResourcesToExport = @()
 
     # List of all modules packaged with this module
-    # ModuleList = @()
+    #ModuleList = @(    )
 
     # List of all files packaged with this module
     # FileList = @()
