@@ -25,7 +25,7 @@ namespace PS1C
         {
             bool result = false;
 
-            if (!Path.EndsInDirectorySeparator(path))
+            if (!PathUtils.EndsInDirectorySeparator(path))
             {
                 path += Path.DirectorySeparatorChar;
             }

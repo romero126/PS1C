@@ -745,7 +745,7 @@ namespace PS1C
             // Determine item Type
             if (itemType == ItemType.Unknown)
             {
-                if (Path.EndsInDirectorySeparator(path))
+                if (PathUtils.EndsInDirectorySeparator(path))
                 {
                     itemType = ItemType.Directory;
                 }
@@ -791,7 +791,7 @@ namespace PS1C
                         return;
                     }
 
-                    if (!Path.EndsInDirectorySeparator(path))
+                    if (!PathUtils.EndsInDirectorySeparator(path))
                     {
                         path += Path.AltDirectorySeparatorChar;
                     }
@@ -916,38 +916,57 @@ namespace PS1C
 
             path = NormalizePath(path);
 
-            if (!ItemExists(path))
-            {
-                throw new Exception("Item not exists");
-            }
-            
-            bool isItemContainer = IsItemContainer(path) && IsItemContainerContainsItems(path);
+            try {
 
-            if (!recurse && isItemContainer)
-            {
-                throw new Exception("Folder contains subitems");
-            }
-
-            IEnumerable<ZipFileItemInfo> archiveItems;
-            if (isItemContainer)
-            {
-                // Recursivly remove items
-                archiveItems = ZipFileDriveInfo.GetItem(path+"*");
-            }
-            else {
-                archiveItems = ZipFileDriveInfo.GetItem(path, true, true);
-            }
-
-
-
-            // Item ToArray skips a file open bug. 
-            foreach(ZipFileItemInfo archiveItem in archiveItems.ToArray())
-            {
-                string action = $"Do you want to remove current file?";
-                if (ShouldProcess(archiveItem.FullName, action))
+                if (!ItemExists(path))
                 {
-                    archiveItem.Delete();
-                } // ShouldProcess
+                    throw new Exception(String.Format(ZipFileProviderStrings.ItemDoesNotExist, path));
+                }
+
+                bool isItemContainer = IsItemContainer(path) && IsItemContainerContainsItems(path);
+
+                if (!recurse && isItemContainer)
+                {
+                    throw new Exception("Folder contains subitems");
+                }
+
+                IEnumerable<ZipFileItemInfo> archiveItems;
+                if (isItemContainer)
+                {
+                    // Recursivly remove items
+
+                    archiveItems = ZipFileDriveInfo.GetItem(path+"*");
+                }
+                else {
+                    archiveItems = ZipFileDriveInfo.GetItem(path, true, true);
+                }
+
+                // Item ToArray skips a file open bug. 
+                foreach(ZipFileItemInfo archiveItem in archiveItems.ToArray())
+                {
+                    string action = $"Do you want to remove current file?";
+                    if (ShouldProcess(archiveItem.FullName, action))
+                    {
+                        archiveItem.Delete();
+                    } // ShouldProcess
+                }
+
+            }
+            catch(Exception exception) {
+                if ((exception is FileNotFoundException) ||
+                        (exception is DirectoryNotFoundException) ||
+                        (exception is UnauthorizedAccessException) ||
+                        (exception is System.Security.SecurityException) ||
+                        (exception is ArgumentException) ||
+                        (exception is PathTooLongException) ||
+                        (exception is NotSupportedException) ||
+                        (exception is ArgumentNullException) ||
+                        (exception is IOException))
+                {
+                    WriteError(new ErrorRecord(exception, "NewItemCreateIOError", ErrorCategory.WriteError, path));
+                }
+                else
+                    throw;
             }
 
 		}
@@ -1191,7 +1210,7 @@ namespace PS1C
             bool pathIsDirectory = ZipFileDriveInfo.IsItemContainer(path);
             bool destIsDirectory = false;
 
-            if (Path.EndsInDirectorySeparator(destinationPath))
+            if (PathUtils.EndsInDirectorySeparator(destinationPath))
             {
                 destIsDirectory = true;
             }

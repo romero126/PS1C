@@ -29,7 +29,7 @@ namespace Microsoft.PowerShell.Commands
             get {
                 if (IsContainer)
                 {
-                    return Path.GetDirectoryName(Path.TrimEndingDirectorySeparator(FullName));
+                    return Path.GetDirectoryName(PathUtils.TrimEndingDirectorySeparator(FullName));
                 }
 
                 return Path.GetDirectoryName(FullName);
@@ -121,7 +121,7 @@ namespace Microsoft.PowerShell.Commands
             get {
                 if (IsContainer)
                 {
-                    return Path.GetFileName(Path.TrimEndingDirectorySeparator(ArchiveEntry.FullName));
+                    return Path.GetFileName(PathUtils.TrimEndingDirectorySeparator(ArchiveEntry.FullName));
                 }
                 return ArchiveEntry.Name;
             }
@@ -151,7 +151,7 @@ namespace Microsoft.PowerShell.Commands
 
         public bool IsContainer {
             get {
-                return Path.EndsInDirectorySeparator(ArchiveEntry.FullName);
+                return PathUtils.EndsInDirectorySeparator(ArchiveEntry.FullName);
             }
         }
 
@@ -180,8 +180,8 @@ namespace Microsoft.PowerShell.Commands
             {
                 path = Path.GetRelativePath(Drive.Name + ":\\", path);
             }
-
-            if (path.Contains( Path.VolumeSeparatorChar))
+            // Path.VolumeSeparatorChar defaults to a / in ubuntu
+            if (path.Contains( ":" ))
             {
                 throw PSTraceSource.NewArgumentException(path);
             }

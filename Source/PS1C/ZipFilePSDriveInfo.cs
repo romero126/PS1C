@@ -10,6 +10,25 @@ using System.IO.Compression;
 namespace Microsoft.PowerShell.Commands
 {
 
+    public static class PathUtils
+    {
+        public static bool EndsInDirectorySeparator(string path)
+        {
+            if (path.EndsWith(Path.AltDirectorySeparatorChar))
+                return true;
+            if (path.EndsWith(Path.DirectorySeparatorChar))
+                return true;
+            return false;
+        }
+        public static string TrimEndingDirectorySeparator(string path)
+        {
+            path = path.TrimEnd(Path.DirectorySeparatorChar).TrimEnd(Path.AltDirectorySeparatorChar);
+            return path;
+        }
+
+        
+    }
+
 	public class ZipFilePSDriveInfo : PSDriveInfo
 	{
 		internal ZipArchive Archive {
@@ -146,13 +165,13 @@ namespace Microsoft.PowerShell.Commands
         {
             IEnumerable<ZipFileItemInfo> results = GetItem();
 
-			path = Path.TrimEndingDirectorySeparator(path).Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+			path = PathUtils.TrimEndingDirectorySeparator(path).Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
 
             WildcardPattern wildcardPattern = WildcardPattern.Get(path, WildcardOptions.IgnoreCase | WildcardOptions.Compiled);
 
             foreach (ZipFileItemInfo item in results)
             {
-                if (wildcardPattern.IsMatch(Path.TrimEndingDirectorySeparator( item.FullArchiveName )))
+                if (wildcardPattern.IsMatch(PathUtils.TrimEndingDirectorySeparator( item.FullArchiveName )))
                 {
                     yield return item;
                 }
@@ -167,7 +186,7 @@ namespace Microsoft.PowerShell.Commands
 
             foreach (ZipFileItemInfo item in results)
             {
-                if ( Path.GetDirectoryName(path) != Path.GetDirectoryName( Path.TrimEndingDirectorySeparator(item.FullArchiveName) ) )
+                if ( Path.GetDirectoryName(path) != Path.GetDirectoryName( PathUtils.TrimEndingDirectorySeparator(item.FullArchiveName) ) )
                 {
                     continue;
                 }
@@ -199,7 +218,7 @@ namespace Microsoft.PowerShell.Commands
                     return true;
                 }
 
-                if (directory && Path.EndsInDirectorySeparator(i.FullArchiveName) && (Path.TrimEndingDirectorySeparator(path) == Path.TrimEndingDirectorySeparator(i.FullArchiveName)))
+                if (directory && PathUtils.EndsInDirectorySeparator(i.FullArchiveName) && (PathUtils.TrimEndingDirectorySeparator(path) == PathUtils.TrimEndingDirectorySeparator(i.FullArchiveName)))
                 {
                     return true;
                 }
@@ -224,7 +243,7 @@ namespace Microsoft.PowerShell.Commands
                 foreach (ZipArchiveEntry entry in zipArchive.Entries)
                 {
                     string fullName = entry.FullName;
-                    if (Path.EndsInDirectorySeparator(fullName))
+                    if (PathUtils.EndsInDirectorySeparator(fullName))
                     {
                         continue;
                     }

@@ -109,10 +109,9 @@ namespace PS1C
                 path = path.Remove(0, ZipFileDriveInfo.Name.Length+1);
             }
 
-            path = path.TrimStart(Path.DirectorySeparatorChar).TrimStart(Path.AltDirectorySeparatorChar);
-
             path = path.Replace(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-            
+            path = path.TrimStart(Path.AltDirectorySeparatorChar);            
+
             // Before returning a normalized path
             return path;
         }
