@@ -42,4 +42,5 @@ Start-ResGen
 
 Write-Host ""
 Write-Host "Building"
-dotnet build .\Source\PS1C\ -v q | Select-String "Error" | Select -unique | Write-Host -ForegroundColor Red
+
+Start-Build -NoWarning

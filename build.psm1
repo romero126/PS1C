@@ -196,3 +196,14 @@ function script:Start-NativeExecution
         $script:ErrorActionPreference = $backupEAP
     }
 }
+
+function Start-Build
+{
+    param(
+        [switch]$NoWarning
+    )
+    if ($NoWarning)
+    {
+        dotnet build .\source\PS1C\ -v q | Select-String "Error" | Select -unique | Write-Host -ForegroundColor Red
+    }
+}
