@@ -62,7 +62,7 @@ function Start-ResGen
     # Add .NET CLI tools to PATH
     Find-Dotnet
 
-    Push-Location "$PSScriptRoot/Source/ResGen"
+    Push-Location "$PSScriptRoot/src/ResGen"
 
     try {
         Start-NativeExecution { dotnet run } | Write-Verbose
@@ -204,6 +204,6 @@ function Start-Build
     )
     if ($NoWarning)
     {
-        dotnet build .\source\PS1C\ -v q | Select-String "Error" | Select -unique | Write-Host -ForegroundColor Red
+        dotnet build .\src\PS1C\ -v q | Select-String "Error" | Select -unique | Write-Host -ForegroundColor Red
     }
 }
