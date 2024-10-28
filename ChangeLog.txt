@@ -1,3 +1,6 @@
+Version 0.0.90.0
+	Revamped the repository, and core features.
+
 Version 0.0.1.1 Added Commands and Invoke-Item
 	Nothing major just minor tweaks.
 	New Features

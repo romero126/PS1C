@@ -1,41 +1,27 @@
-# Welcome to PS1C a ZipFile Powershell Provider
+# Welcome to PowerShell Compressed (PS1C) is a ZipFile Powershell Provider
 
-PS1C is a Powershell Provider that Impliments basic functionality and drive access to ZipFiles.
+## What is it?
+PS1C is a PowerShell Provider that lets you mount zip/archive files as if they were native PSDrive.
 
-This is by far in an Early Stages of development and will be continued to be worked on until it becomes fully Implimentable in PowerShell.
-
-The goal for this project is to be a drag and drop implimentation into PowerShell's base code, to submit as a PR and integrated with PowerShells native codebase.
-
-## What is PS1C?
-PS1C is my first Attempt at implimenting 
+## Requirements
+PS1C works only in PowerShell 6 and up.
 
 # Getting Started
 
 ## Installing PS1C
-``` powershell
+``` ps1
 Install-Module -Name PS1C -Force
 ```
 
 ## Getting Started
-``` powershell
-# Important Notes:
-#   Path to the ZipFile must be a fully qualified path
+``` ps1
 
 Import-Module PS1C -Force
 $ZipFile = "$PSScriptRoot\MyZipFile.zip"
 New-PSDrive -Name MyZip -PSProvider ZipFile -Root $ZipFile
+cd MyZip:\
 ```
 
+
 ## Special Considerations
-
-All tests of features will be pulled directly from PowerShell's CodeBase in order to Mimic most of Base Functionality of the FileSystem PSProvider with a few Exceptions.
-
-### Currently Supported Commands
-
-* Get-ChildItem (Early Development)
-* Get-Item (Early Development)
-* New-Item
-* Remove-Item
-* Rename-Item
-* Get-Content
-* Set-Content
+This is designed to feel as natural to PowerShell's default FileSystemprovider, however not all functionality can be implemented due to actual limitations within the PowerShell Language.
