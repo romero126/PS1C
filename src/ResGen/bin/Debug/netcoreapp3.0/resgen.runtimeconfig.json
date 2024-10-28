@@ -1,0 +1,13 @@
+{
+  "runtimeOptions": {
+    "tfm": "netcoreapp3.0",
+    "framework": {
+      "name": "Microsoft.NETCore.App",
+      "version": "3.0.0"
+    },
+    "configProperties": {
+      "System.Runtime.TieredCompilation": true,
+      "System.Runtime.TieredCompilation.QuickJit": true
+    }
+  }
+}
