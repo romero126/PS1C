@@ -20,12 +20,20 @@ namespace PS1C
         internal const string Utf8 = "utf8";
         internal const string Utf8NoBom = "utf8NoBOM";
         internal const string Utf8Bom = "utf8BOM";
-        internal const string Utf7 = "utf7";
+        // internal const string Utf7 = "utf7"; // UTF7 is obsolete and was removed
         internal const string Utf32 = "utf32";
         internal const string Default = "default";
         internal const string OEM = "oem";
         internal static readonly string[] TabCompletionResults = {
-                Ascii, BigEndianUnicode, OEM, Unicode, Utf7, Utf8, Utf8Bom, Utf8NoBom, Utf32
+                Ascii,
+                BigEndianUnicode,
+                OEM,
+                Unicode,
+                // Utf7, // UTF7 is obsolete and was removed
+                Utf8,
+                Utf8Bom,
+                Utf8NoBom,
+                Utf32
             };
 
         internal static Dictionary<string, Encoding> encodingMap = new Dictionary<string, Encoding>(StringComparer.OrdinalIgnoreCase)
@@ -35,7 +43,7 @@ namespace PS1C
             { Default, System.Text.Encoding.Default },
             { OEM, System.Text.Encoding.Default },
             { Unicode, System.Text.Encoding.Unicode },
-            { Utf7, System.Text.Encoding.UTF7 },
+            //{ Utf7, System.Text.Encoding.UTF7 }, // UTF7 is obsolete and was removed
             { Utf8, System.Text.Encoding.UTF8 },
             { Utf8Bom, System.Text.Encoding.UTF8 },
             { Utf8NoBom, System.Text.Encoding.UTF8 },
@@ -62,6 +70,7 @@ namespace PS1C
             {
                 return foundEncoding;
             }
+            
 
             // error condition: unknown encoding value
             string validEncodingValues = string.Join(", ", TabCompletionResults);
@@ -118,7 +127,7 @@ namespace PS1C
             EncodingConversion.BigEndianUnicode,
             EncodingConversion.OEM,
             EncodingConversion.Unicode,
-            EncodingConversion.Utf7,
+            //EncodingConversion.Utf7,          // UTF7 is obsolete and was removed
             EncodingConversion.Utf8,
             EncodingConversion.Utf8Bom,
             EncodingConversion.Utf8NoBom,

@@ -1,6 +1,8 @@
 # Prerequisites
-DotNet SDK 8.0
-Nuget Repository Configured
+* VSCode (Is the preferred method)
+* DotNet SDK 8.0
+* Nuget Repository Configured
+* Install Module Pester
 ``` ps1
 Install-Module Pester -Force
 ```
@@ -20,7 +22,7 @@ dotnet build
 . .\Tests\Test.ps1
 ```
 
-# Custom Tests
+# Custom Tests and Debugging
 
 ``` ps1
 

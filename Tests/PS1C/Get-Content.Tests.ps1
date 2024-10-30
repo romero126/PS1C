@@ -392,16 +392,12 @@ baz
         }
 
         It "Should not return any content when -TotalCount 0" {
-            $result = Get-Content -Path $testPath -TotalCount 0 -ReadCount 1 -Encoding UTF7
-
-            throw "Got result $($result.GetType()) $($result.Length) `n $result"
-            Write-Host "Got result ", $result.Length -ForegroundColor Cyan
-            Write-Host $result
+            $result = Get-Content -Path $testPath -TotalCount 0 -ReadCount 1 -Encoding UTF8
             $result.Length | Should -Be 0
         }
 
         It "Should return first three lines two lines at a time for -TotalCount 3 and -ReadCount 2" {
-            $result = Get-Content -Path $testPath -TotalCount 3 -ReadCount 2 -Encoding UTF7
+            $result = Get-Content -Path $testPath -TotalCount 3 -ReadCount 2 -Encoding UTF8
             $result.Length | Should -Be 2
             $expected = New-Object System.Array[] 2
             $expected[0] = ($firstLine,$secondLine)

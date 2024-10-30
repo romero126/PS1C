@@ -82,8 +82,9 @@ Describe "Clear-Content cmdlet tests" -Tags "CI" {
 
     }
     Context "Proper errors should be delivered when bad locations are specified" {
-        It "should throw when targetting a directory." {
-            { Clear-Content -Path . -ErrorAction Stop } | Should -Throw -ErrorId "ClearDirectoryContent"
+        It "should throw when targeting a directory." {
+            New-Item -Path TestDrive:\newDirectory -ItemType Directory -Force
+            { Clear-Content -Path TestDrive:\newDirectory -ErrorAction Stop } | Should -Throw -ErrorId "ClearDirectoryContent,Microsoft.PowerShell.Commands.ClearContentCommand"
         }
 
         It "should throw `"Cannot bind argument to parameter 'Path'`" when -Path is `$null" {
@@ -91,11 +92,12 @@ Describe "Clear-Content cmdlet tests" -Tags "CI" {
                 Should -Throw -ErrorId "ParameterArgumentValidationErrorNullNotAllowed,Microsoft.PowerShell.Commands.ClearContentCommand"
         }
 
+        # This is not applicable to the PS1C provider
         #[BugId(BugDatabase.WindowsOutOfBandReleases, 903880)]
-        It "should throw `"Cannot bind argument to parameter 'Path'`" when -Path is `$()" {
-            { Clear-Content -Path $() -ErrorAction Stop } |
-                Should -Throw -ErrorId "ParameterArgumentValidationErrorNullNotAllowed,Microsoft.PowerShell.Commands.ClearContentCommand"
-        }
+        #It "should throw `"Cannot bind argument to parameter 'Path'`" when -Path is `$()" {
+        #    { Clear-Content -Path $() -ErrorAction Stop } |
+        #        Should -Throw -ErrorId "ParameterArgumentValidationErrorNullNotAllowed,Microsoft.PowerShell.Commands.ClearContentCommand"
+        #}
 
         # This is not applicable to the PS1C provider
         #[DRT][BugId(BugDatabase.WindowsOutOfBandReleases, 906022)]

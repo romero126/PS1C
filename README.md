@@ -25,3 +25,5 @@ cd MyZip:\
 
 ## Special Considerations
 This is designed to feel as natural to PowerShell's default FileSystemprovider, however not all functionality can be implemented due to actual limitations within the PowerShell Language.
+
+UTF7 was removed as a supported encoding format.

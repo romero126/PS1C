@@ -1382,7 +1382,8 @@ namespace PS1C
             string delimiter = "\n";
 
             Encoding encoding = Encoding.Default;
-            // Encoding encoding = new Encoding.Default();
+            //Encoding encoding = Encoding.UTF7;
+            //Encoding encoding = new Encoding.Default();
 
             bool streamTypeSpecified = false;
             bool usingByteEncoding = false;
@@ -1636,6 +1637,22 @@ namespace PS1C
             }
 
             path = NormalizePath(path);
+            bool isDirectory = IsItemContainer(path);
+            if (isDirectory)
+            {
+                System.Exception e = new Exception(
+                    string.Format("Unable to clear content of '{0}' because it is a directory. Clear-Content is only supported on files.", path)
+                );
+                // ClearDirectoryContentError
+                ErrorRecord err = new ErrorRecord(
+                    e,
+                    "ClearDirectoryContent",
+                    ErrorCategory.InvalidArgument,
+                    path
+                    );
+                //ThrowTerminatingError(err);
+                WriteError(err);
+            }
 
             try
             {

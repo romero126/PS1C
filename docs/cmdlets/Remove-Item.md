@@ -1,0 +1,1 @@
+Remove-Item regex support is not available at this time

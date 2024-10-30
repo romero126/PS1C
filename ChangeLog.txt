@@ -1,5 +1,6 @@
 Version 0.0.90.0
 	Revamped the repository, and core features.
+	UTF7 was removed as a supported encoding format.
 
 Version 0.0.1.1 Added Commands and Invoke-Item
 	Nothing major just minor tweaks.
