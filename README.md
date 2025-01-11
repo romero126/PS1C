@@ -22,6 +22,15 @@ New-PSDrive -Name MyZip -PSProvider ZipFile -Root $ZipFile
 cd MyZip:\
 ```
 
+## Currently the commandsare supported
+
+* Add-Content
+* Clear-Content
+* Get-Content
+* New-Item
+* Remove-Item
+* Rename-Item
+* Set-Content
 
 ## Special Considerations
 This is designed to feel as natural to PowerShell's default FileSystemprovider, however not all functionality can be implemented due to actual limitations within the PowerShell Language.
