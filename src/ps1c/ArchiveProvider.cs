@@ -112,7 +112,7 @@ namespace PS1C
             }
 
             path = path.Replace(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-            path = path.TrimStart(Path.AltDirectorySeparatorChar);            
+            path = path.TrimStart(Path.AltDirectorySeparatorChar);
 
             // Before returning a normalized path
             return path;
@@ -482,7 +482,7 @@ namespace PS1C
             {
                 return false;
             }
-            WriteWarning("I should resolve a path ${path}");
+
             // We can never actually modify the PowerShell path, as the
             // Win32 filtering support returns items that match the short
             // filename OR long filename.
@@ -1056,7 +1056,7 @@ namespace PS1C
             bool result = false;
 
             path = NormalizePath(path);
-            
+
             if (String.IsNullOrEmpty(path))
             {
                 return true;
