@@ -7,6 +7,20 @@
             "label": "Build",
             "type": "shell",
             "command": "dotnet build",
+
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Run Tests",
+            "type": "shell",
+            "command": "pwsh.exe",
+            "args": [
+                "-Command '. ${workspaceFolder}\\Tests\\Test.ps1'"
+            ],
+            "dependsOn": "Build",
             "group": {
                 "kind": "build",
                 "isDefault": true
@@ -19,6 +33,15 @@
             "args": [
                 "-Command '. ${file}\" '"
             ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Echo Space",
+            "type": "shell",
+            "command": "echo ${workspaceFolder}",
             "group": {
                 "kind": "build",
                 "isDefault": true
