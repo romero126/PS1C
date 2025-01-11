@@ -1,1 +1,0 @@
-Import-Module "$PSScriptRoot\ps1c.dll"

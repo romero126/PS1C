@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk" DefaultTargets="InvokeBuild">
+
+  <PropertyGroup>
+  <!--
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>netcoreapp8.0</TargetFramework>
+  -->
+
+    <TargetFramework>net8.0</TargetFramework>
+    <RuntimeIdentifiers>linux-x64;osx-x64;win;</RuntimeIdentifiers>
+    <Description>PS1C</Description>
+    <UseNETCoreGenerator>true</UseNETCoreGenerator>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" />
+    <PackageReference Include="PowerShellStandard.Library" Version="5.1.0-preview-06">
+      <PrivateAssets>All</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+
+  <PropertyGroup>
+    <PSModuleName>PS1C</PSModuleName>
+    <BuildItemPath>$(MSBuildProjectDirectory)$(OutDir)</BuildItemPath>
+    <InstallModulePath>$(MSBuildStartupDirectory)\$(PSModuleName)\</InstallModulePath>
+    <ResGenPath>$([System.IO.Path]::GetFullPath(`$(MSBuildProjectDirectory)\..\ResGen`))</ResGenPath>
+    <ResourcesPath>$(MSBuildStartupDirectory)\src\$(PSModuleName)\resources</ResourcesPath>
+  </PropertyGroup>
+
+  <Target Name="GenerateResources">
+    <Exec Command="echo Generating Resources" />
+    <Exec Command="dotnet run" WorkingDirectory="$(ResGenPath)" />
+  </Target>
+  <Target Name="MoveToInstall">
+    <Exec Command="echo Move files to Module Path" />
+    <Exec Command="rmdir $(InstallModulePath)" />
+
+    <ItemGroup>
+        <ExportItems Include="$(ResourcesPath)\PS1C.psd1" />
+        <ExportItems Include="$(ResourcesPath)\*.ps1xml" />
+        <ExportItems Include="$(ResourcesPath)\*.psm1" />
+        <ExportItems Include="$(MSBuildProjectDirectory)\$(OutDir)\*.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(ExportItems)" DestinationFolder="$(InstallModulePath)" />
+  </Target>
+  <Target Name="InvokeBuild" DependsOnTargets="Clean;GenerateResources;Build;MoveToInstall" />
+</Project>
