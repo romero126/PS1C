@@ -28,7 +28,11 @@ namespace PS1C
         {
             get
             {
+                #if NET6_0_OR_GREATER
                 return RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+                #else
+                return false;
+                #endif
             }
         }
 
@@ -39,7 +43,11 @@ namespace PS1C
         {
             get
             {
+                #if NET6_0_OR_GREATER
                 return RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+                #else
+                return false;
+                #endif
             }
         }
 
@@ -50,7 +58,11 @@ namespace PS1C
         {
             get
             {
+                #if NET6_0_OR_GREATER
                 return RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+                #else
+                return true;
+                #endif
             }
         }
 

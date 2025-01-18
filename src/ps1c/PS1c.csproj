@@ -6,23 +6,39 @@
     <TargetFramework>netcoreapp8.0</TargetFramework>
   -->
 
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFrameworks>net46;net8.0</TargetFrameworks>
     <RuntimeIdentifiers>linux-x64;osx-x64;win;</RuntimeIdentifiers>
     <Description>PS1C</Description>
     <UseNETCoreGenerator>true</UseNETCoreGenerator>
   </PropertyGroup>
 
-  <ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net8.0' ">
     <PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" />
-    <PackageReference Include="PowerShellStandard.Library" Version="5.1.0-preview-06">
+    <PackageReference Include="PowerShellStandard.Library" Version="5.1.1">
       <PrivateAssets>All</PrivateAssets>
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net46' ">
+    <Reference Include="System.IO.Compression, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+      <HintPath>C:/WINDOWS/Microsoft.Net/assembly/GAC_MSIL/System.IO.Compression/v4.0_4.0.0.0__b77a5c561934e089/System.IO.Compression.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.IO.Compression.FileSystem, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+      <HintPath>C:\WINDOWS\Microsoft.Net\assembly\GAC_MSIL\System.IO.Compression.FileSystem\v4.0_4.0.0.0__b77a5c561934e089\System.IO.Compression.FileSystem.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
+
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" />
+    <PackageReference Include="PowerShellStandard.Library" Version="5.1.1" PrivateAssets="all" />
+  </ItemGroup>
 
   <PropertyGroup>
     <PSModuleName>PS1C</PSModuleName>
-    <BuildItemPath>$(MSBuildProjectDirectory)$(OutDir)</BuildItemPath>
+    <BuildItemPath>$(MSBuildProjectDirectory)$(OutputPath)</BuildItemPath>
     <InstallModulePath>$(MSBuildStartupDirectory)\$(PSModuleName)\</InstallModulePath>
     <ResGenPath>$([System.IO.Path]::GetFullPath(`$(MSBuildProjectDirectory)\..\ResGen`))</ResGenPath>
     <ResourcesPath>$(MSBuildStartupDirectory)\src\$(PSModuleName)\resources</ResourcesPath>
@@ -34,15 +50,18 @@
   </Target>
   <Target Name="MoveToInstall">
     <Exec Command="echo Move files to Module Path" />
-    <Exec Command="rmdir $(InstallModulePath)" />
+    <Exec Command="rmdir $(InstallModulePath) /s" />
 
     <ItemGroup>
+        <PSEditionDesktop Include="$(MSBuildProjectDirectory)\$(OutputPath)\net46\*" />
+        <PSEditionDesktopCore Include="$(MSBuildProjectDirectory)\$(OutputPath)\net8.0\*" />
         <ExportItems Include="$(ResourcesPath)\PS1C.psd1" />
         <ExportItems Include="$(ResourcesPath)\*.ps1xml" />
         <ExportItems Include="$(ResourcesPath)\*.psm1" />
-        <ExportItems Include="$(MSBuildProjectDirectory)\$(OutDir)\*.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(ExportItems)" DestinationFolder="$(InstallModulePath)" />
+    <Copy SourceFiles="@(PSEditionDesktop)" DestinationFolder="$(InstallModulePath)\Desktop" />
+    <Copy SourceFiles="@(PSEditionDesktopCore)" DestinationFolder="$(InstallModulePath)\Core" />
   </Target>
   <Target Name="InvokeBuild" DependsOnTargets="Clean;GenerateResources;Build;MoveToInstall" />
 </Project>

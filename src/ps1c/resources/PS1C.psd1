@@ -10,7 +10,7 @@
     CmdletsToExport = @()
     AliasesToExport = @()
     NestedModules="PS1C.psm1"
-    RootModule="PS1C.dll"
     HelpInfoURI = 'https://go.microsoft.com/fwlink/?LinkId=393254'
     FormatsToProcess = @('PS1C.ArchiveFileInfo.Format.ps1xml')
+
 }
