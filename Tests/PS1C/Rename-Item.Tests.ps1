@@ -30,7 +30,6 @@ Describe "Rename-Item tests" -Tag "CI" {
 
     }
     AfterAll {
-        Write-Host "AfterAll"
         try {
             Remove-Item $target -Force -ErrorAction Continue
             Remove-Item $targetSpName -Force -ErrorAction Continue
