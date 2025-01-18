@@ -21,3 +21,5 @@ $tests = @(
 )
 
 Invoke-Pester -Script $tests -Output Detailed -PassThru
+
+Remove-Module PS1C
