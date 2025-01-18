@@ -145,7 +145,12 @@ namespace PS1C
                 for (var i = 0; i < _delimiter.Length; i++)
                 {
                     currentChar = _delimiter[i];
+                    #if NET6_0_OR_GREATER
                     lowByte = Unsafe.As<char, byte>(ref currentChar);
+                    #else
+                    lowByte = (byte)currentChar;
+                    #endif
+
                     _offsetDictionary[lowByte] = _delimiter.Length - i - 1;
                 }
             }
@@ -393,16 +398,31 @@ namespace PS1C
             // lookup tables).
             int numRead = 0;
             int currentOffset = actualDelimiter.Length;
+
+            #if NET6_0_OR_GREATER
             Span<char> readBuffer = stackalloc char[currentOffset];
+            #else
+            char[] readBuffer = new char[currentOffset];
+            #endif
+
             bool delimiterNotFound = true;
             _currentLineContent.Clear();
 
             do
             {
+
+                #if NET6_0_OR_GREATER
                 // Read in the required batch of characters
                 numRead = readBackward
                                 ? _backReader.Read(readBuffer.Slice(0, currentOffset))
                                 : _reader.Read(readBuffer.Slice(0, currentOffset));
+                #else
+                // Read in the required batch of characters
+                numRead = readBackward
+                                ? _backReader.Read(readBuffer, 0, currentOffset)
+                                : _reader.Read(readBuffer, 0, currentOffset);
+                #endif
+
 
                 if (numRead > 0)
                 {
@@ -883,7 +903,11 @@ namespace PS1C
         /// <returns>Return the number of characters read, or -1 if we reach the head of the stream.</returns>
         public override int Read(char[] buffer, int index, int count)
         {
+            #if NET6_0_OR_GREATER
             return ReadSpan(new Span<char>(buffer, index, count));
+            #else
+            return ReadSpan(buffer);
+            #endif
         }
 
         /// <summary>
@@ -891,13 +915,23 @@ namespace PS1C
         /// </summary>
         /// <param name="buffer">Output buffer.</param>
         /// <returns>Return the number of characters read, or -1 if we reach the head of the stream.</returns>
+
+        #if NET6_0_OR_GREATER
         public override int Read(Span<char> buffer)
         {
             return ReadSpan(buffer);
         }
-
-        private int ReadSpan(Span<char> buffer)
+        #else
+        public int Read(char[] buffer)
         {
+            return ReadSpan(buffer);
+        }
+        #endif
+
+
+        #if NET6_0_OR_GREATER
+        private int ReadSpan(Span<char> buffer)
+                {
             // deal with the argument validation
             int charRead = 0;
             int index = 0;
@@ -924,6 +958,37 @@ namespace PS1C
 
             return charRead;
         }
+        #else
+        private int ReadSpan(char[] buffer)
+                {
+            // deal with the argument validation
+            int charRead = 0;
+            int index = 0;
+            int count = buffer.Length;
+
+            do
+            {
+                if (_charCount == 0)
+                {
+                    if (RefillCharBuffer() == -1)
+                    {
+                        return charRead;
+                    }
+                }
+
+                int toRead = _charCount > count ? count : _charCount;
+
+                for (; toRead > 0; toRead--, count--, charRead++)
+                {
+                    buffer[index++] = _charBuff[--_charCount];
+                }
+            }
+            while (count > 0);
+
+            return charRead;
+        }
+        #endif
+
 
         /// <summary>
         /// Read a line from the current stream.

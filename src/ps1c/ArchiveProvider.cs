@@ -159,7 +159,7 @@ namespace PS1C
             }
 
             FileInfo archiveInfo = new FileInfo(
-                Path.GetFullPath(drive.Root, SessionState.Path.CurrentLocation.Path)
+                PathUtils.GetFullPath(drive.Root, SessionState.Path.CurrentLocation.Path)
             );
 
 			if (!File.Exists(archiveInfo.FullName))
@@ -1267,11 +1267,11 @@ namespace PS1C
 
                         if (pathIsDirectory)
                         {
-                            string relPath = Path.GetRelativePath($"{driveName}{path}",  file.FullName);
-                            destPath = Path.Join(destinationPath, relPath);
+                            string relPath = PathUtils.GetRelativePath($"{driveName}{path}",  file.FullName);
+                            destPath = PathUtils.Join(destinationPath, relPath);
                         }
                         else if (destIsDirectory) {
-                            destPath = Path.Join(destinationPath, file.Name);
+                            destPath = PathUtils.Join(destinationPath, file.Name);
                         }
 
                         file.CopyTo(destPath);
@@ -1740,9 +1740,6 @@ namespace PS1C
             }
         }
 
-        #region InodeTracker
-            private HashSet<(UInt64, UInt64)> _visitations;
-        #endregion
     #endregion
     #region Dynamic Parameters
 

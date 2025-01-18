@@ -177,7 +177,7 @@ namespace PS1C
 
             if (path.StartsWith(Drive.Name))
             {
-                path = Path.GetRelativePath(Drive.Name + ":\\", path);
+                path = PathUtils.GetRelativePath(Drive.Name + ":\\", path);
             }
             // Path.VolumeSeparatorChar defaults to a / in ubuntu
             if (path.Contains( ":" ))
@@ -315,11 +315,11 @@ namespace PS1C
             // Cleanup the filesystem path
             if (destFileName.StartsWith(Drive.Name))
             {
-                destFileName = Path.GetRelativePath((Drive.Name + ":\\"), destFileName);
+                destFileName = PathUtils.GetRelativePath((Drive.Name + ":\\"), destFileName);
             }
             else if (destFileName.StartsWith(Drive.Root))
             {
-                destFileName = Path.GetRelativePath(Drive.Root, destFileName);
+                destFileName = PathUtils.GetRelativePath(Drive.Root, destFileName);
             }
 
             CopyToArchive(destFileName, removeItem, overwrite);

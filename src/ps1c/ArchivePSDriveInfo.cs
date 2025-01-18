@@ -9,26 +9,6 @@ using System.IO.Compression;
 
 namespace PS1C
 {
-
-    public static class PathUtils
-    {
-        public static bool EndsInDirectorySeparator(string path)
-        {
-            if (path.EndsWith(Path.AltDirectorySeparatorChar))
-                return true;
-            if (path.EndsWith(Path.DirectorySeparatorChar))
-                return true;
-            return false;
-        }
-        public static string TrimEndingDirectorySeparator(string path)
-        {
-            path = path.TrimEnd(Path.DirectorySeparatorChar).TrimEnd(Path.AltDirectorySeparatorChar);
-            return path;
-        }
-
-        
-    }
-
 	public class ArchivePSDriveInfo : PSDriveInfo
 	{
 		internal ZipArchive Archive {
