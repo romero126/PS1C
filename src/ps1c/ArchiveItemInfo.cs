@@ -294,7 +294,6 @@ namespace PS1C
 
             // Convert Path to its proper dest path
             destFileName = destFileName.Replace(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-            
             // If the destination file is a folder
             // We should move/copy the item to that folder.
             // Example:
@@ -372,7 +371,7 @@ namespace PS1C
                 thisEntry.Delete();
             }
 
-            Drive.UnlockArchive(FullArchiveName);
+            Drive.UnlockArchive(FullArchiveName, true);
 
         }
 
