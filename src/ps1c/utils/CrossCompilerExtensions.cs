@@ -96,7 +96,7 @@ namespace PS1C
 
             if (p.StartsWith(r))
             {
-                return p.Substring(r.Length + 1);
+                return p.Substring(r.Length);
             }
 
             p = p.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
