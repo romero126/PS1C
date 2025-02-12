@@ -656,10 +656,10 @@ namespace PS1C
             {
                 newName = newName.Remove(0, 2);
             }
-            // else if (String.Equals(Path.GetDirectoryName(path), Path.GetDirectoryName(newName), StringComparison.OrdinalIgnoreCase))
-            // {
-            //     newName = Path.GetFileName(newName);
-            // }
+            else if (String.Equals(Path.GetDirectoryName(path), Path.GetDirectoryName(newName), StringComparison.OrdinalIgnoreCase))
+            {
+                newName = Path.GetFileName(newName);
+            }
 
             //Check to see if the target specified is just filename. We dont allow rename to move the file to a different directory.
             //If a path is specified for the newName then we flag that as an error.
@@ -675,7 +675,7 @@ namespace PS1C
             }
             
             try
-            {           
+            {
                 // Manually move this item since you cant have more than one stream open at a time.
                 ArchiveItemInfo file = new ArchiveItemInfo(ArchiveDriveInfo, path);
                 ArchiveItemInfo result;
@@ -693,7 +693,7 @@ namespace PS1C
                     // Validate Current PWD is not the Provider
                     //if ((!Path.IsPathFullyQualified(newName)) && (!SessionState.Path.CurrentLocation.Path.StartsWith(ArchiveDriveInfo.Name + ":")) )
                     //{
-                    //    newName = Path.Join(SessionState.Path.CurrentLocation.Path, newName);
+                    //    newName = PathUtils.Join(SessionState.Path.CurrentLocation.Path, newName);
                     //}
 
                     file.MoveTo(newName);
