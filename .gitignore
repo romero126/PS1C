@@ -17,3 +17,5 @@ src/ResGen/obj/*
 src/ResGen/packages
 
 /PS1C
+Tests/PS1C/Zipfile.zip
+Scratch/
