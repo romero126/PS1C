@@ -41,8 +41,22 @@ function Get-NonExistantFunctionName
 
 Describe "Clear-Content cmdlet tests" -Tags "CI" {
     BeforeAll {
+        function New-ZipFile {
+            [CmdletBinding()]
+            param(
+                [Parameter(Mandatory)]
+                [System.String] $Path
+            )
+            $bytes = [System.Convert]::FromBase64String("UEsFBgAAAAAAAAAAAAAAAAAAAAAAAA==")
+            [System.IO.File]::WriteAllBytes($Path, $bytes)
+        }
+
         Import-Module "$PSScriptRoot\..\..\PS1C\PS1C.psd1"
-        New-PSDrive -Name TestDrive -PSProvider PS1C -root "$PSScriptRoot/ZipFile.Zip" -ErrorAction "Stop"
+        
+        $zipfilePath = "$env:TEMP\ZipFile.zip"
+        New-ZipFile -Path $zipfilePath      
+        New-PSDrive -Name TestDrive -PSProvider PS1C -root "$zipfilePath" -ErrorAction "Stop"
+
         $file1 = "file1.txt"
         $file2 = "file2.txt"
         $file3 = "file3.txt"

@@ -1,9 +1,24 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
+
 Describe "Set-Content cmdlet tests" -Tags "CI" {
     BeforeAll {
+        function New-ZipFile {
+            [CmdletBinding()]
+            param(
+                [Parameter(Mandatory)]
+                [System.String] $Path
+            )
+            $bytes = [System.Convert]::FromBase64String("UEsFBgAAAAAAAAAAAAAAAAAAAAAAAA==")
+            [System.IO.File]::WriteAllBytes($Path, $bytes)
+        }
+
         Import-Module "$PSScriptRoot\..\..\PS1C\PS1C.psd1"
-        New-PSDrive -Name TestDrive -PSProvider PS1C -root "$PSScriptRoot/ZipFile.Zip" -ErrorAction "Stop"
+
+        $zipfilePath = "$env:TEMP\ZipFile.zip"
+        New-ZipFile -Path $zipfilePath
+      
+        New-PSDrive -Name TestDrive -PSProvider PS1C -root "$zipfilePath" -ErrorAction "Stop"
 
         $testdrive = "TestDrive:\"
 
@@ -23,10 +38,10 @@ Describe "Set-Content cmdlet tests" -Tags "CI" {
 
     Context "Set-Content should create a file if it does not exist" {
         AfterEach {
-          Remove-Item -Path $filePath1 -Force -ErrorAction SilentlyContinue
+            Remove-Item -Path $filePath1 -Force -ErrorAction SilentlyContinue
         }
         It "should create a file if it does not exist" {
-            Set-Content -Path $filePath1 -Value "$file1"
+            Set-Content -Path $filePath1 -Value "$file1" -force
             $result = Get-Content -Path $filePath1
             $result| Should -Be "$file1"
         }
@@ -44,8 +59,8 @@ Describe "Set-Content cmdlet tests" -Tags "CI" {
             $result = Get-Content -Path $filePath1
             $result | Should -BeExactly "ExpectedContent"
         }
-        It "should Set-Content to testdrive\dynamicfile.txt with dynamic parameters" {
-            Set-Content -Path $testdrive\dynamicfile.txt -Value "ExpectedContent"
+        It "should Set-Content to testdrive:\dynamicfile.txt with dynamic parameters" {
+            Set-Content -Path $testdrive\dynamicfile.txt -Value "ExpectedContent" -Force:$true
             $result = Get-Content -Path $testdrive\dynamicfile.txt
             $result | Should -BeExactly "ExpectedContent"
         }
@@ -68,7 +83,7 @@ Describe "Set-Content cmdlet tests" -Tags "CI" {
         }
         #[BugId(BugDatabase.WindowsOutOfBandReleases, 9058182)]
         It "should be able to pass multiple [string]`$objects to Set-Content through the pipeline to output a dynamic Path file" {
-            "hello","world"|Set-Content $testdrive\dynamicfile2.txt
+            "hello","world"|Set-Content $testdrive\dynamicfile2.txt -Force
             $result=Get-Content $testdrive\dynamicfile2.txt
             $result.length | Should -Be 2
             $result[0]     | Should -BeExactly "hello"
