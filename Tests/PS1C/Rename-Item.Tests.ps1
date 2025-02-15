@@ -1,15 +1,29 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
+
 Describe "Rename-Item tests" -Tag "CI" {
     BeforeAll {
+        function New-ZipFile {
+            [CmdletBinding()]
+            param(
+                [Parameter(Mandatory)]
+                [System.String] $Path
+            )
+            $bytes = [System.Convert]::FromBase64String("UEsFBgAAAAAAAAAAAAAAAAAAAAAAAA==")
+            [System.IO.File]::WriteAllBytes($Path, $bytes)
+        }
+
         Import-Module "$PSScriptRoot\..\..\PS1C\PS1C.psd1"
-        New-PSDrive -Name TestDrive -PSProvider PS1C -root "$PSScriptRoot/ZipFile.Zip" -ErrorAction "Stop"
+
+        $zipfilePath = "$env:TEMP\ZipFile.zip"
+        New-ZipFile -Path $zipfilePath
+
+        New-PSDrive -Name TestDrive -PSProvider PS1C -root "$zipfilePath" -ErrorAction "Stop"
 
         $TestDrive = "TestDrive:"
 
         $source = "$TESTDRIVE/originalFile.txt"
         $target = "$TESTDRIVE/ItemWhichHasBeenRenamed.txt"
-
 
         $sourceSp = "$TestDrive/``[orig-file``].txt"
         $targetSpName = "ItemWhichHasBeen[Renamed].txt"
@@ -18,10 +32,10 @@ Describe "Rename-Item tests" -Tag "CI" {
         $wdSp = "$TestDrive/``[test-dir``]"
 
         # Setup file System
-        New-Item $Source -Value "This is content" -Force -ErrorAction Continue
+        New-Item $Source -Value "This is content" -Force -ErrorAction stop
 
         try {
-            New-Item $sourceSP -Value "This is not content" -Force -ErrorAction Continue
+            New-Item -Path $sourceSP -Value "This is not content" -Force -ErrorAction Continue
             New-Item "$wdSp" -ItemType Directory -ErrorAction Continue
         }
         catch {
@@ -33,23 +47,23 @@ Describe "Rename-Item tests" -Tag "CI" {
         try {
             Remove-Item $target -Force -ErrorAction Continue
             Remove-Item $targetSpName -Force -ErrorAction Continue
-            #Remove-Item $targetSp -Force -ErrorAction Continue
         }
         catch {}
     }
     It "Rename-Item will rename a file" {
         Rename-Item $source $target
 
-        test-path $source | Should -BeFalse
-        test-path $target | Should -BeTrue
+        Test-Path $source | Should -BeFalse
+        Test-Path $target | Should -BeTrue
 
         Get-Content $target | should -Be "This is content"
     }
     It "Rename-Item will rename a file when path contains special char" {
         Rename-Item $sourceSp $targetSpName
         test-path $sourceSp | Should -BeFalse
-        #test-path $targetSp | Should -true
-        #Get-Content $targetSp | should -Be "This is content"
+        test-path -path $targetSp | Should -true
+
+        Get-Content $targetSp | should -Be "This is content"
     }
 #    It "Rename-Item will rename a file when -Path and CWD contains special char" {
 #        $content = "This is content"
