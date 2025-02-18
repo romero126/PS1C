@@ -4,7 +4,7 @@
     CompanyName="Microsoft Corporation"
     Copyright="© Microsoft Corporation. All rights reserved."
     Description='PowerShell module for working with ZIP archives.'
-    ModuleVersion="1.0.0"
+    ModuleVersion="1.0.1"
     PowerShellVersion="3.0"
     DotNetFrameworkVersion = 4.5
     CmdletsToExport = @()
